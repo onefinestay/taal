@@ -16,6 +16,7 @@ pymysql.install_as_MySQLdb()
 # engine = create_engine('sqlite:///:memory:', echo=True)
 connection_string = 'mysql://127.0.0.1:33306/test_taal'
 
+
 def drop_and_recreate_db():
     server, db_name = connection_string.rsplit('/', 1)
     engine = create_engine(server)
@@ -59,8 +60,8 @@ class TestModels(object):
     def test_translate(self):
         with Session() as session:
             translation = ConcreteTranslation(
-                context='context', message_id='message_id', language='language',
-                translation='translation')
+                context='context', message_id='message_id',
+                language='language', translation='translation')
             session.add(translation)
             session.commit()
 
@@ -74,8 +75,8 @@ class TestModels(object):
     def test_translate_structure(self):
         with Session() as session:
             translation = ConcreteTranslation(
-                context='context', message_id='message_id', language='language',
-                translation='translation')
+                context='context', message_id='message_id',
+                language='language', translation='translation')
             session.add(translation)
             session.commit()
 
