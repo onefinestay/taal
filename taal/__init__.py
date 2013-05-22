@@ -41,7 +41,7 @@ class Translator(object):
             return translatable
 
 
-class TranslationContext(object):
+class TranslationContextManager(object):
     """ Knows all available ``message_id``s for a given context """
 
     identifier = None
@@ -51,7 +51,7 @@ class TranslationContext(object):
 
 
 class TranslationManager(object):
-    """ Collection of ``TranslationContext``s """
+    """ Collection of ``TranslationContextManager``s """
 
     def __init__(self):
         self._registry = {}

@@ -1,8 +1,8 @@
-from taal import TranslationContext, translation_manager
+from taal import TranslationContextManager, translation_manager
 
 
-class TypeTranslationContext(TranslationContext):
-    """ TranslationContext for Kaiso types """
+class TypeTranslationContextManager(TranslationContextManager):
+    """ TranslationContextManager for Kaiso types """
 
     identifier = "_taal:kaiso_type"
 
@@ -15,4 +15,4 @@ class TypeTranslationContext(TranslationContext):
         return (type_[0] for type_ in hierarchy)
 
 
-translation_manager.register(TypeTranslationContext)
+translation_manager.register(TypeTranslationContextManager)
