@@ -1,0 +1,4 @@
+-r requirements.txt
+
+pymysql==0.5
+pytest==2.3.5
