@@ -2,6 +2,7 @@ from kaiso.attributes import Uuid, String
 from kaiso.types import Entity
 import pytest
 
+from taal import translation_manager
 from taal.kaiso import TypeTranslationContext
 
 
@@ -19,12 +20,20 @@ class TestKaiso(object):
         storage.save(Fish)
 
     @pytest.mark.usesfixtures('storage')
-    def test_kaiso(self, storage):
+    def test_kaiso_context_manager(self, storage):
         self._setup(storage)
-        translation_context = TypeTranslationContext(storage)
+        translation_context = TypeTranslationContext(storage=storage)
         message_ids = set(translation_context.list_message_ids())
         assert message_ids == set(['Entity', 'Animal', 'Fish'])
 
     @pytest.mark.usefixtures('storage')
-    def test_foo(self, storage):
+    def test_kaiso_translation_manager(self, storage):
         self._setup(storage)
+        context_message_id_pairs = set(
+            translation_manager.list_contexts_and_message_ids(
+                storage=storage))
+        assert context_message_id_pairs == set([
+            ('_taal:kaiso_type', 'Entity'),
+            ('_taal:kaiso_type', 'Animal'),
+            ('_taal:kaiso_type', 'Fish'),
+        ])
