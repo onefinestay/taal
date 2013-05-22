@@ -22,8 +22,8 @@ class TestKaiso(object):
     @pytest.mark.usesfixtures('storage')
     def test_kaiso_context_manager(self, storage):
         self._setup(storage)
-        translation_context = TypeTranslationContextManager(storage=storage)
-        message_ids = set(translation_context.list_message_ids())
+        context_manager = TypeTranslationContextManager(storage=storage)
+        message_ids = set(context_manager.list_message_ids())
         assert message_ids == set(['Entity', 'Animal', 'Fish'])
 
     @pytest.mark.usefixtures('storage')

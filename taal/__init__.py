@@ -44,7 +44,7 @@ class Translator(object):
 class TranslationContextManager(object):
     """ Knows all available ``message_id``s for a given context """
 
-    identifier = None
+    context = None
 
     def list_message_ids(self):
         raise NotImplementedError()
@@ -56,20 +56,20 @@ class TranslationManager(object):
     def __init__(self):
         self._registry = {}
 
-    def register(self, translation_context):
-        identifier = translation_context.identifier
-        if identifier in self._registry:
+    def register(self, context_manager):
+        context = context_manager.context
+        if context in self._registry:
             raise KeyError(
-                "Context with identifier '{}' already registered".format(
-                identifier)
+                "ContextManager with context '{}' already registered".format(
+                context)
             )
-        self._registry[identifier] = translation_context
+        self._registry[context] = context_manager
 
     def list_contexts_and_message_ids(self, **kwargs):
-        for identifier, context_manager_cls in self._registry.iteritems():
+        for context, context_manager_cls in self._registry.iteritems():
             context_manager = context_manager_cls(**kwargs)
             for message_id in context_manager.list_message_ids():
-                yield (identifier, message_id)
+                yield (context, message_id)
 
 
 translation_manager = TranslationManager()

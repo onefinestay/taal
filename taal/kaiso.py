@@ -4,10 +4,10 @@ from taal import TranslationContextManager, translation_manager
 class TypeTranslationContextManager(TranslationContextManager):
     """ TranslationContextManager for Kaiso types """
 
-    identifier = "_taal:kaiso_type"
+    context = "_taal:kaiso_type"
 
-    def __init__(self, **kwargs):
-        self.storage = kwargs['storage']
+    def __init__(self, storage, **kwargs):
+        self.storage = storage
 
     def list_message_ids(self):
         storage = self.storage
