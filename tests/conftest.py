@@ -4,8 +4,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from tests.models import Base
-
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -34,6 +32,9 @@ def storage(request):
 
 @pytest.fixture
 def session(request):
+    # importing at the module level messes up coverage
+    from tests.models import Base
+
     connection_string = request.config.getoption('db_connection')
 
     def drop_and_recreate_db():
@@ -41,7 +42,6 @@ def session(request):
         engine = create_engine(server)
         query = 'DROP DATABASE {0}; CREATE DATABASE {0}'.format(db_name)
         engine.execute(query)
-
 
     engine = create_engine(connection_string)
     session_cls = sessionmaker(bind=engine)
