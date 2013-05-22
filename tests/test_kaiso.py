@@ -1,21 +1,13 @@
-from kaiso.attributes import Uuid, String
-from kaiso.types import Entity
 import pytest
 
 from taal import translation_manager
 from taal.kaiso import TypeTranslationContextManager
 
-
-class Animal(Entity):
-    id = Uuid(unique=True)
-    name = String()
-
-
-class Fish(Animal):
-    pass
+from tests.kaiso import Fish, patch_kaiso
 
 
 class TestKaiso(object):
+    # Couldn't figure out how to inject fixtures into setup_method
     def _setup(self, storage):
         storage.save(Fish)
 
@@ -37,3 +29,14 @@ class TestKaiso(object):
             ('_taal:kaiso_type', 'Animal'),
             ('_taal:kaiso_type', 'Fish'),
         ])
+
+    @pytest.mark.usefixtures('storage')
+    def test_kaiso_patching(self, storage):
+        self._setup(storage)
+        for entry in storage.get_type_hierarchy():
+            assert len(entry) == 3
+        with patch_kaiso():
+            for entry in storage.get_type_hierarchy():
+                assert len(entry) == 4
+        for entry in storage.get_type_hierarchy():
+            assert len(entry) == 3
