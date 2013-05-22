@@ -1,7 +1,11 @@
 class TranslatableString(object):
     def __init__(self, context, message_id):
-        self.message_id = message_id
         self.context = context
+        self.message_id = message_id
+
+    def __repr__(self):
+        return "<TranslatableString: ({}, {})>".format(
+            self.context, self.message_id)
 
 
 class Translator(object):
