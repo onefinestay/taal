@@ -24,5 +24,3 @@ def patch_kaiso():
         yield
     finally:
         unpatch_kaiso()
-
-

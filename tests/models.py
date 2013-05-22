@@ -8,5 +8,3 @@ Base = declarative_base()
 
 class ConcreteTranslation(TranslationMixin, Base):
     __tablename__ = "test_translations"
-
-
