@@ -8,6 +8,9 @@ from sqlalchemy.orm import sessionmaker
 from taal.models import TranslationMixin
 from taal import Translator, TranslatableString
 
+
+ECHO = False
+
 pymysql.install_as_MySQLdb()
 
 # engine = create_engine('sqlite:///:memory:', echo=True)
@@ -20,7 +23,7 @@ def drop_and_recreate_db():
     engine.execute(query)
 
 
-engine = create_engine(connection_string, echo=True)
+engine = create_engine(connection_string, echo=ECHO)
 Base = declarative_base()
 session_cls = sessionmaker(bind=engine)
 
@@ -67,3 +70,30 @@ class TestModels(object):
 
             translation = translator.translate(translatable, 'language')
             assert translation == 'translation'
+
+    def test_translate_structure(self):
+        with Session() as session:
+            translation = ConcreteTranslation(
+                context='context', message_id='message_id', language='language',
+                translation='translation')
+            session.add(translation)
+            session.commit()
+
+            translator = Translator(ConcreteTranslation, session)
+            translatable = TranslatableString(
+                context='context', message_id='message_id')
+
+            structure = {
+                'int': 1,
+                'str': 'str',
+                'list': [1, 'str', translatable],
+                'translatable': translatable,
+            }
+
+            translation = translator.translate(structure, 'language')
+            assert translation == {
+                'int': 1,
+                'str': 'str',
+                'list': [1, 'str', 'translation'],
+                'translatable': 'translation',
+            }

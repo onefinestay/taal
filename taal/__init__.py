@@ -9,7 +9,7 @@ class Translator(object):
         self.model = model
         self.session = session
 
-    def translate(self, translatable, language):
+    def _translate(self, translatable, language):
         context = translatable.context
         message_id = translatable.message_id
 
@@ -23,3 +23,19 @@ class Translator(object):
         ).one()
 
         return translation.translation
+
+    def translate(self, translatable, language):
+        if isinstance(translatable, TranslatableString):
+            return self._translate(translatable, language)
+        elif isinstance(translatable, dict):
+            return dict(
+                (key, self.translate(val, language))
+                for key, val in translatable.iteritems()
+            )
+        elif isinstance(translatable, list):
+            return list(
+                self.translate(item, language)
+                for item in translatable)
+
+        else:
+            return translatable
