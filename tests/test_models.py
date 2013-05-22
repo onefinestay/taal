@@ -1,9 +1,12 @@
+from contextlib import contextmanager
+
 import pymysql
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from taal.models import TranslationMixin
+from taal import Translator, TranslatableString
 
 pymysql.install_as_MySQLdb()
 
@@ -19,21 +22,48 @@ def drop_and_recreate_db():
 
 engine = create_engine(connection_string, echo=True)
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
+session_cls = sessionmaker(bind=engine)
+
+
+@contextmanager
+def Session():
+    session = session_cls()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 class ConcreteTranslation(TranslationMixin, Base):
     __tablename__ = "test_translations"
 
 
-def test_create():
-    drop_and_recreate_db()
-    Base.metadata.create_all(engine)
-    session = Session()
-    translation = ConcreteTranslation(
-        context='', message_id='', language='')
-    session.add(translation)
-    session.commit()
+class TestModels(object):
+    def setup_method(self, method):
+        drop_and_recreate_db()
+        Base.metadata.create_all(engine)
 
-    session2 = Session()
-    assert session2.query(ConcreteTranslation).count() == 1
+    def test_create(self):
+        with Session() as session1:
+            translation = ConcreteTranslation(
+                context='', message_id='', language='')
+            session1.add(translation)
+            session1.commit()
+
+        with Session() as session2:
+            assert session2.query(ConcreteTranslation).count() == 1
+
+    def test_translate(self):
+        with Session() as session:
+            translation = ConcreteTranslation(
+                context='context', message_id='message_id', language='language',
+                translation='translation')
+            session.add(translation)
+            session.commit()
+
+            translator = Translator(ConcreteTranslation, session)
+            translatable = TranslatableString(
+                context='context', message_id='message_id')
+
+            translation = translator.translate(translatable, 'language')
+            assert translation == 'translation'

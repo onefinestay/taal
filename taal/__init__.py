@@ -1,5 +1,5 @@
 class TranslatableString(object):
-    def __init__(self, message_id, context=None):
+    def __init__(self, context, message_id):
         self.message_id = message_id
         self.context = context
 
@@ -16,10 +16,10 @@ class Translator(object):
         context_col = getattr(self.model, 'context')
         message_id_col = getattr(self.model, 'message_id')
         language_col = getattr(self.model, 'language')
-        translation = self.session.query(
+        translation = self.session.query(self.model).filter(
             context_col == context,
             message_id_col == message_id,
             language_col == language
         ).one()
 
-        return translation
+        return translation.translation
