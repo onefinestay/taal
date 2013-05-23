@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from contextlib import contextmanager
+
 from taal import (
     TranslationContextManager, translation_manager, TranslatableString)
 
@@ -28,7 +30,7 @@ class TypeTranslationContextManager(TranslationContextManager):
             # yield (type_id, label, bases, attrs)
 
 
-def monkey_patch_kaiso():
+def _patch():
     from kaiso.persistence import Storage
 
     get_type_hierarchy = Storage.get_type_hierarchy
@@ -42,16 +44,24 @@ def monkey_patch_kaiso():
             yield (type_id, label, bases, attrs)
 
     Storage.get_type_hierarchy = get_labeled_type_hierarchy
-    monkey_patch_kaiso.get_type_hierarchy = get_type_hierarchy
+    _patch.get_type_hierarchy = get_type_hierarchy
 
 
-def unpatch_kaiso():
+def _unpatch():
     from kaiso.persistence import Storage
     try:
-        Storage.get_type_hierarchy = monkey_patch_kaiso.get_type_hierarchy
+        Storage.get_type_hierarchy = _patch.get_type_hierarchy
     except AttributeError:
         # not yet patched
         pass
 
+
+@contextmanager
+def patch_kaiso():
+    _patch()
+    try:
+        yield
+    finally:
+        _unpatch()
 
 translation_manager.register(TypeTranslationContextManager)

@@ -1,9 +1,9 @@
 import pytest
 
 from taal import Translator
-from taal.kaiso import TypeTranslationContextManager
+from taal.kaiso import TypeTranslationContextManager, patch_kaiso
 
-from tests.kaiso import Fish, patch_kaiso
+from tests.kaiso import Fish
 from tests.models import ConcreteTranslation
 
 
