@@ -14,7 +14,6 @@ def pytest_addoption(parser):
 
     parser.addoption(
         "--db_connection", action="store",
-        default="mysql://localhost/test_taal",
         help="Sqlalchemy connection string"
     )
 
@@ -36,6 +35,8 @@ def session(request):
     from tests.models import Base
 
     connection_string = request.config.getoption('db_connection')
+    if connection_string is None:
+        raise RuntimeError("No database connection string specified")
 
     def drop_and_recreate_db():
         server, db_name = connection_string.rsplit('/', 1)
