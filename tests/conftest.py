@@ -13,7 +13,7 @@ def pytest_addoption(parser):
         "See the docs for valid URIs"))
 
     parser.addoption(
-        "--db_connection", action="store",
+        "--db_uri", action="store",
         help="Sqlalchemy connection string"
     )
 
@@ -34,7 +34,7 @@ def session(request):
     # importing at the module level messes up coverage
     from tests.models import Base
 
-    connection_string = request.config.getoption('db_connection')
+    connection_string = request.config.getoption('db_uri')
     if connection_string is None:
         raise RuntimeError("No database connection string specified")
 
