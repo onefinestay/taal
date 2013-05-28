@@ -7,7 +7,7 @@ from taal import (
 class TypeTranslationContextManager(TranslationContextManager):
     """ TranslationContextManager for Kaiso types """
 
-    context = "_taal:kaiso_type"
+    context = "taal:kaiso_type"
 
     def __init__(self, storage, **kwargs):
         self.storage = storage

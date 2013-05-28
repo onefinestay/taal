@@ -25,9 +25,9 @@ class TestKaiso(object):
             translation_manager.list_contexts_and_message_ids(
                 storage=storage))
         assert context_message_id_pairs == set([
-            ('_taal:kaiso_type', 'Entity'),
-            ('_taal:kaiso_type', 'Animal'),
-            ('_taal:kaiso_type', 'Fish'),
+            ('taal:kaiso_type', 'Entity'),
+            ('taal:kaiso_type', 'Animal'),
+            ('taal:kaiso_type', 'Fish'),
         ])
 
     @pytest.mark.usefixtures('storage')
