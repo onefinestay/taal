@@ -1,3 +1,10 @@
+from __future__ import absolute_import
+
+from abc import ABCMeta, abstractmethod, abstractproperty
+
+from sqlalchemy.orm.exc import NoResultFound
+
+
 try:
     VERSION = __import__('pkg_resources').get_distribution('taal').version
 except:  # pragma: no cover
@@ -26,13 +33,17 @@ class Translator(object):
         context_col = getattr(self.model, 'context')
         message_id_col = getattr(self.model, 'message_id')
         language_col = getattr(self.model, 'language')
-        translation = self.session.query(self.model).filter(
-            context_col == context,
-            message_id_col == message_id,
-            language_col == language
-        ).one()
 
-        return translation.translation
+        try:
+            translation = self.session.query(self.model).filter(
+                context_col == context,
+                message_id_col == message_id,
+                language_col == language
+            ).one()
+            return translation.translation
+        except NoResultFound:
+            raise KeyError("No translation found for ({}, {}, {})".format(
+                language, context, message_id))
 
     def translate(self, translatable, language):
         if isinstance(translatable, TranslatableString):
@@ -54,10 +65,15 @@ class Translator(object):
 class TranslationContextManager(object):
     """ Knows all available ``message_id``s for a given context """
 
-    context = None
+    __metaclass__ = ABCMeta
 
+    @abstractproperty
+    def context(self):
+        """ String used to identify translations managed by this manager """
+
+    @abstractmethod
     def list_message_ids(self):
-        raise NotImplementedError()
+        """ List of message ids for all objects managed by this manager """
 
 
 class TranslationManager(object):
