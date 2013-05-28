@@ -1,3 +1,9 @@
+try:
+    VERSION = __import__('pkg_resources').get_distribution('taal').version
+except:  # pragma: no cover
+    VERSION = 'unknown'
+
+
 class TranslatableString(object):
     def __init__(self, context, message_id):
         self.context = context
