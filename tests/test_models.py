@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import pytest
 
 from taal import Translator, TranslatableString
@@ -15,6 +17,13 @@ class TestModels(object):
 
         assert session.query(ConcreteTranslation).count() == 1
 
+    def test_repr(self, session):
+        translatable = TranslatableString(
+            context='my context', message_id='my message id')
+
+        assert "my context" in repr(translatable)
+        assert "my message id" in repr(translatable)
+
     def test_translate(self, session):
         translation = ConcreteTranslation(
             context='context', message_id='message_id',
@@ -28,6 +37,14 @@ class TestModels(object):
 
         translation = translator.translate(translatable, 'language')
         assert translation == 'translation'
+
+    def test_translate_missing(self, session):
+        translator = Translator(ConcreteTranslation, session)
+        translatable = TranslatableString(
+            context='context', message_id='message_id')
+
+        with pytest.raises(KeyError):
+            translator.translate(translatable, 'language')
 
     def test_translate_structure(self, session):
         translation = ConcreteTranslation(
