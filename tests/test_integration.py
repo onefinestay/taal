@@ -1,7 +1,7 @@
 import pytest
 
 from taal import Translator
-from taal.kaiso import TypeTranslationContextManager, patch_kaiso
+from taal.kaiso import TypeTranslationContextManager, get_type_hierarchy
 
 from tests.kaiso import Fish
 from tests.models import ConcreteTranslation
@@ -13,7 +13,7 @@ def serialize_type_hierarchy(storage):
     """
 
     types = {}
-    for type_id, label, bases, attrs in storage.get_type_hierarchy():
+    for type_id, label, bases, attrs in get_type_hierarchy(storage):
 
         attr_dict = {}
         for attr in attrs:
@@ -56,8 +56,7 @@ class TestKaiso(object):
     def test_kaiso_patching(self, session, storage):
         self._setup_db(session)
         self._setup_kaiso(storage)
-        with patch_kaiso():
-            serialized_hierarchy = serialize_type_hierarchy(storage)
+        serialized_hierarchy = serialize_type_hierarchy(storage)
 
         fish = serialized_hierarchy['Fish']
         translator = Translator(ConcreteTranslation, session)

@@ -1,7 +1,7 @@
 import pytest
 
 from taal import translation_manager
-from taal.kaiso import TypeTranslationContextManager, patch_kaiso
+from taal.kaiso import TypeTranslationContextManager, get_type_hierarchy
 
 from tests.kaiso import Fish
 
@@ -35,8 +35,5 @@ class TestKaiso(object):
         self._setup(storage)
         for entry in storage.get_type_hierarchy():
             assert len(entry) == 3
-        with patch_kaiso():
-            for entry in storage.get_type_hierarchy():
-                assert len(entry) == 4
-        for entry in storage.get_type_hierarchy():
-            assert len(entry) == 3
+        for entry in get_type_hierarchy(storage):
+            assert len(entry) == 4
