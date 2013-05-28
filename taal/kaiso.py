@@ -18,8 +18,14 @@ class TypeTranslationContextManager(TranslationContextManager):
         return (type_[0] for type_ in hierarchy)
 
 
-def get_type_hierarchy(storage):
-    for type_id, bases, attrs in storage.get_type_hierarchy():
+def get_type_hierarchy(storage, start_type_id=None):
+    try:
+        type_hierarchy = storage.get_type_hierarchy(start_type_id)
+    except TypeError:
+        # older version of kaiso
+        type_hierarchy = storage.get_type_hierarchy()
+
+    for type_id, bases, attrs in type_hierarchy:
         label = TranslatableString(
             context=TypeTranslationContextManager.context,
             message_id=type_id
