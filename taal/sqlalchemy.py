@@ -30,4 +30,4 @@ class TranslatableString(types.TypeDecorator):
                 "Value was {}".format(value))
 
     def process_result_value(self, value, dialect):
-        return TaalTranslatableString(None, None)
+        return TaalTranslatableString()

@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
+from kaiso.attributes import String
+
 from taal import (
-    TranslationContextManager, translation_manager, TranslatableString)
+    TranslationContextManager, translation_manager,
+    TranslatableString as TaalTranslatableString)
 
 
 class TypeTranslationContextManager(TranslationContextManager):
@@ -17,6 +20,8 @@ class TypeTranslationContextManager(TranslationContextManager):
         hierarchy = storage.get_type_hierarchy()
         return (type_[0] for type_ in hierarchy)
 
+translation_manager.register(TypeTranslationContextManager)
+
 
 def get_type_hierarchy(storage, start_type_id=None):
     try:
@@ -26,11 +31,21 @@ def get_type_hierarchy(storage, start_type_id=None):
         type_hierarchy = storage.get_type_hierarchy()
 
     for type_id, bases, attrs in type_hierarchy:
-        label = TranslatableString(
+        label = TaalTranslatableString(
             context=TypeTranslationContextManager.context,
             message_id=type_id
         )
         yield (type_id, label, bases, attrs)
 
 
-translation_manager.register(TypeTranslationContextManager)
+class TranslatableString(String):
+    @staticmethod
+    def to_db(value):
+        if value is not None:
+            raise RuntimeError(
+                "Cannot save directly to translated fields. "
+                "Value was {}".format(value))
+
+    @staticmethod
+    def to_python(value):
+        return TaalTranslatableString()
