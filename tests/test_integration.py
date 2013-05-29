@@ -61,7 +61,7 @@ class TestKaiso(object):
         serialized_hierarchy = serialize_type_hierarchy(storage)
 
         fish = serialized_hierarchy['Fish']
-        translator = Translator(ConcreteTranslation, session)
-        translated_fish = translator.translate(fish, 'language')
+        translator = Translator(ConcreteTranslation, session, 'language')
+        translated_fish = translator.translate(fish)
 
         assert translated_fish['label'] == 'Translated Fish'

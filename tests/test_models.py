@@ -31,20 +31,20 @@ class TestModels(object):
         session.add(translation)
         session.commit()
 
-        translator = Translator(ConcreteTranslation, session)
+        translator = Translator(ConcreteTranslation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
-        translation = translator.translate(translatable, 'language')
+        translation = translator.translate(translatable)
         assert translation == 'translation'
 
     def test_translate_missing(self, session):
-        translator = Translator(ConcreteTranslation, session)
+        translator = Translator(ConcreteTranslation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
         with pytest.raises(KeyError):
-            translator.translate(translatable, 'language')
+            translator.translate(translatable)
 
     def test_translate_structure(self, session):
         translation = ConcreteTranslation(
@@ -53,7 +53,7 @@ class TestModels(object):
         session.add(translation)
         session.commit()
 
-        translator = Translator(ConcreteTranslation, session)
+        translator = Translator(ConcreteTranslation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -64,7 +64,7 @@ class TestModels(object):
             'translatable': translatable,
         }
 
-        translation = translator.translate(structure, 'language')
+        translation = translator.translate(structure)
         assert translation == {
             'int': 1,
             'str': 'str',

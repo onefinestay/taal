@@ -38,7 +38,7 @@ def test_get_translation(session):
     message_id = get_message_id(model)
     translatable = TranslatableString(context=context, message_id=message_id)
 
-    translator = Translator(ConcreteTranslation, session)
-    translated_data = translator.translate(translatable, 'english')
+    translator = Translator(ConcreteTranslation, session, 'english')
+    translated_data = translator.translate(translatable)
 
     assert translated_data == 'English name'

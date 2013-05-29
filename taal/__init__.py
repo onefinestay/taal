@@ -22,11 +22,12 @@ class TranslatableString(object):
 
 
 class Translator(object):
-    def __init__(self, model, session):
+    def __init__(self, model, session, language):
         self.model = model
         self.session = session
+        self.language = language
 
-    def _translate(self, translatable, language):
+    def _translate(self, translatable):
         context = translatable.context
         message_id = translatable.message_id
 
@@ -38,24 +39,24 @@ class Translator(object):
             translation = self.session.query(self.model).filter(
                 context_col == context,
                 message_id_col == message_id,
-                language_col == language
+                language_col == self.language
             ).one()
             return translation.translation
         except NoResultFound:
             raise KeyError("No translation found for ({}, {}, {})".format(
-                language, context, message_id))
+                self.language, context, message_id))
 
-    def translate(self, translatable, language):
+    def translate(self, translatable):
         if isinstance(translatable, TranslatableString):
-            return self._translate(translatable, language)
+            return self._translate(translatable)
         elif isinstance(translatable, dict):
             return dict(
-                (key, self.translate(val, language))
+                (key, self.translate(val))
                 for key, val in translatable.iteritems()
             )
         elif isinstance(translatable, list):
             return list(
-                self.translate(item, language)
+                self.translate(item)
                 for item in translatable)
 
         else:
