@@ -4,8 +4,7 @@ import pytest
 
 from taal import translation_manager, TranslatableString, Translator
 from taal.kaiso import (
-    TypeTranslationContextManager, get_type_hierarchy, get_context,
-    get_message_id)
+    TypeTranslationContextManager, get_context, get_message_id)
 
 from tests.kaiso import Fish
 from tests.models import (
@@ -37,13 +36,6 @@ class TestKaiso(object):
             ('taal:kaiso_type', 'Animal'),
             ('taal:kaiso_type', 'Fish'),
         ])
-
-    def test_kaiso_patching(self, storage):
-        self._setup(storage)
-        for entry in storage.get_type_hierarchy():
-            assert len(entry) == 3
-        for entry in get_type_hierarchy(storage):
-            assert len(entry) == 4
 
 
 class TestFields(object):

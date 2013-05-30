@@ -6,9 +6,7 @@ from kaiso.attributes import String
 from kaiso.references import get_store_for_object
 from kaiso.types import get_index_entries
 
-from taal import (
-    TranslationContextManager, translation_manager,
-    TranslatableString as TaalTranslatableString)
+from taal import TranslationContextManager, translation_manager
 
 
 class TypeTranslationContextManager(TranslationContextManager):
@@ -25,21 +23,6 @@ class TypeTranslationContextManager(TranslationContextManager):
         return (type_[0] for type_ in hierarchy)
 
 translation_manager.register(TypeTranslationContextManager)
-
-
-def get_type_hierarchy(storage, start_type_id=None):
-    try:
-        type_hierarchy = storage.get_type_hierarchy(start_type_id)
-    except TypeError:
-        # older version of kaiso
-        type_hierarchy = storage.get_type_hierarchy()
-
-    for type_id, bases, attrs in type_hierarchy:
-        label = TaalTranslatableString(
-            context=TypeTranslationContextManager.context,
-            message_id=type_id
-        )
-        yield (type_id, label, bases, attrs)
 
 
 def get_context(obj, attribute_name):
