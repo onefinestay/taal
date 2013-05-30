@@ -1,6 +1,10 @@
+from __future__ import absolute_import
+
 import json
 
 import pytest
+from kaiso.types import Entity
+from kaiso.attributes import Integer
 
 from taal import translation_manager, TranslatableString, Translator
 from taal.kaiso import (
@@ -38,6 +42,11 @@ class TestKaiso(object):
         ])
 
 
+class MultipleUniques(Entity):
+    id1 = Integer(unique=True, default=1)
+    id2 = Integer(unique=True, default=1)
+
+
 class TestFields(object):
     def test_field(self, storage):
         item = CustomFieldsEntity(id=0, identifier="foo")
@@ -63,6 +72,15 @@ class TestFields(object):
 
         assert translation.context == expected_context
         assert translation.message_id == expected_message_id
+
+    def test_multiple_uniques(self):
+        item = MultipleUniques()
+        message_id = get_message_id(item)
+        expected_message_id = json.dumps([
+            ("multipleuniques", "id1", 1),
+            ("multipleuniques", "id2", 1),
+        ])
+        assert message_id == expected_message_id
 
     def test_get_translation(self, session, storage):
         item = CustomFieldsEntity()
