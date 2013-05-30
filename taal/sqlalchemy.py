@@ -8,7 +8,8 @@ from sqlalchemy.orm import class_mapper
 from taal import TranslatableString as TaalTranslatableString
 
 
-def get_context(table, column):
+def get_context(obj, column):
+    table = obj.__table__
     return "taal:sa_field:{}:{}".format(table, column)
 
 
@@ -27,7 +28,7 @@ class TranslatableString(types.TypeDecorator):
         if value is not None:
             raise RuntimeError(
                 "Cannot save directly to translated fields. "
-                "Value was {}".format(value))
+                "Value was '{}'".format(value))
 
     def process_result_value(self, value, dialect):
         return TaalTranslatableString()
