@@ -4,7 +4,6 @@ import json
 
 from kaiso.attributes import String
 from kaiso.references import get_store_for_object
-from kaiso.types import get_index_entries
 
 from taal import TranslationContextManager, translation_manager
 
@@ -33,8 +32,9 @@ def get_context(obj, attribute_name):
 
 
 def get_message_id(obj):
-    primary_keys = list(get_index_entries(obj))
-    return json.dumps(primary_keys)
+    manager = get_store_for_object(obj)
+    primary_keys = list(manager.type_registry.get_index_entries(obj))
+    return json.dumps(sorted(primary_keys))
 
 
 class TranslatableString(String):

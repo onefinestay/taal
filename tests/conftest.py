@@ -23,9 +23,8 @@ def storage(request):
     from kaiso.persistence import Storage
 
     neo4j_uri = request.config.getoption('neo4j_uri')
+    Storage(neo4j_uri).destroy()
     storage = Storage(neo4j_uri)
-    storage.delete_all_data()
-    storage.initialize()
     return storage
 
 

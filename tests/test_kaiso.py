@@ -73,8 +73,9 @@ class TestFields(object):
         assert translation.context == expected_context
         assert translation.message_id == expected_message_id
 
-    def test_multiple_uniques(self):
+    def test_multiple_uniques(self, storage):
         item = MultipleUniques()
+        storage.save(item)
         message_id = get_message_id(item)
         expected_message_id = json.dumps([
             ("multipleuniques", "id1", 1),
