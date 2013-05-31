@@ -5,7 +5,9 @@ import json
 from kaiso.attributes import String
 from kaiso.references import get_store_for_object
 
-from taal import TranslationContextManager, translation_manager
+from taal import (
+    TranslationContextManager, translation_manager,
+    TranslatableString as TaalTranslatableString)
 
 
 class TypeTranslationContextManager(TranslationContextManager):
@@ -39,7 +41,10 @@ def get_message_id(obj):
 
 class TranslatableString(String):
     @staticmethod
-    def to_db(value):
+    def to_primitive(value, for_db):
+        if not for_db:
+            return value
+
         if value is not None:
             raise RuntimeError(
                 "Cannot save directly to translated fields. "
@@ -48,4 +53,4 @@ class TranslatableString(String):
     @staticmethod
     def to_python(value):
         """ Not needed until we allow data in this field """
-        # return TaalTranslatableString()
+        return TaalTranslatableString()
