@@ -19,13 +19,13 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def storage(request):
-    from kaiso.persistence import Storage
+def manager(request):
+    from kaiso.persistence import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
-    Storage(neo4j_uri).destroy()
-    storage = Storage(neo4j_uri)
-    return storage
+    Manager(neo4j_uri).destroy()
+    manager = Manager(neo4j_uri)
+    return manager
 
 
 @pytest.fixture

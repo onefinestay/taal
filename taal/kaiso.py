@@ -15,12 +15,12 @@ class TypeTranslationContextManager(TranslationContextManager):
 
     context = "taal:kaiso_type"
 
-    def __init__(self, storage, **kwargs):
-        self.storage = storage
+    def __init__(self, manager, **kwargs):
+        self.manager = manager
 
     def list_message_ids(self):
-        storage = self.storage
-        hierarchy = storage.get_type_hierarchy()
+        manager = self.manager
+        hierarchy = manager.get_type_hierarchy()
         return (type_[0] for type_ in hierarchy)
 
 translation_manager.register(TypeTranslationContextManager)

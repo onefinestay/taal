@@ -15,26 +15,26 @@ from tests.models import (
     CustomFieldsEntity, ConcreteTranslation, create_translation_for_entity)
 
 
-storage_fixture = pytest.mark.usesfixtures('storage')
+manager_fixture = pytest.mark.usesfixtures('manager')
 fixture = pytest.mark.usesfixtures('session')
 
 
 class TestKaiso(object):
     # Couldn't figure out how to inject fixtures into setup_method
-    def _setup(self, storage):
-        storage.save(Fish)
+    def _setup(self, manager):
+        manager.save(Fish)
 
-    def test_kaiso_context_manager(self, storage):
-        self._setup(storage)
-        context_manager = TypeTranslationContextManager(storage=storage)
+    def test_kaiso_context_manager(self, manager):
+        self._setup(manager)
+        context_manager = TypeTranslationContextManager(manager=manager)
         message_ids = set(context_manager.list_message_ids())
         assert message_ids == set(['Entity', 'Animal', 'Fish'])
 
-    def test_kaiso_translation_manager(self, storage):
-        self._setup(storage)
+    def test_kaiso_translation_manager(self, manager):
+        self._setup(manager)
         context_message_id_pairs = set(
             translation_manager.list_contexts_and_message_ids(
-                storage=storage))
+                manager=manager))
         assert context_message_id_pairs == set([
             ('taal:kaiso_type', 'Entity'),
             ('taal:kaiso_type', 'Animal'),
@@ -48,21 +48,21 @@ class MultipleUniques(Entity):
 
 
 class TestFields(object):
-    def test_field(self, storage):
+    def test_field(self, manager):
         item = CustomFieldsEntity(id=0, identifier="foo")
-        storage.save(item)
+        manager.save(item)
 
-        retrieved = storage.get(CustomFieldsEntity, id=0)
+        retrieved = manager.get(CustomFieldsEntity, id=0)
         assert retrieved.identifier == "foo"
 
-    def test_cant_set_translatable_field(self, storage):
+    def test_cant_set_translatable_field(self, manager):
         item = CustomFieldsEntity(name="foo")
         with pytest.raises(RuntimeError):
-            storage.save(item)
+            manager.save(item)
 
-    def test_context_message_id(self, session, storage):
+    def test_context_message_id(self, session, manager):
         item = CustomFieldsEntity(id=0)
-        storage.save(item)
+        manager.save(item)
 
         create_translation_for_entity(
             session, 'english', item, 'name', 'English name')
@@ -73,9 +73,9 @@ class TestFields(object):
         assert translation.context == expected_context
         assert translation.message_id == expected_message_id
 
-    def test_multiple_uniques(self, storage):
+    def test_multiple_uniques(self, manager):
         item = MultipleUniques()
-        storage.save(item)
+        manager.save(item)
         message_id = get_message_id(item)
         expected_message_id = json.dumps([
             ("multipleuniques", "id1", 1),
@@ -83,9 +83,9 @@ class TestFields(object):
         ])
         assert message_id == expected_message_id
 
-    def test_get_translation(self, session, storage):
+    def test_get_translation(self, session, manager):
         item = CustomFieldsEntity()
-        storage.save(item)
+        manager.save(item)
 
         create_translation_for_entity(
             session, 'english', item, 'name', 'English name')

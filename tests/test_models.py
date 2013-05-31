@@ -7,7 +7,7 @@ from taal import Translator, TranslatableString
 from tests.models import ConcreteTranslation
 
 
-@pytest.mark.usefixtures('storage')
+@pytest.mark.usefixtures('manager')
 class TestModels(object):
     def test_create(self, session):
         translation = ConcreteTranslation(
