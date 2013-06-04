@@ -50,8 +50,8 @@ def create_translation_for_model(
 
 
 def create_translation_for_entity(
-        session, language, obj, field, translation_str):
-    context = taal_kaiso.get_context(obj, field)
-    message_id = taal_kaiso.get_message_id(obj)
+        session, manager, language, obj, field, translation_str):
+    context = taal_kaiso.get_context(manager, obj, field)
+    message_id = taal_kaiso.get_message_id(manager, obj)
     return _create_translation(
         session, language, context, message_id, translation_str)

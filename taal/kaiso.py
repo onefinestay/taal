@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import json
 
 from kaiso.attributes import String
-from kaiso.references import get_store_for_object
 
 from taal import (
     TranslationContextManager, translation_manager,
@@ -26,15 +25,13 @@ class TypeTranslationContextManager(TranslationContextManager):
 translation_manager.register(TypeTranslationContextManager)
 
 
-def get_context(obj, attribute_name):
-    manager = get_store_for_object(obj)
+def get_context(manager, obj, attribute_name):
     data = manager.serialize(obj)
     type_id = data['__type__']
     return "taal:kaiso_field:{}:{}".format(type_id, attribute_name)
 
 
-def get_message_id(obj):
-    manager = get_store_for_object(obj)
+def get_message_id(manager, obj):
     primary_keys = list(manager.type_registry.get_index_entries(obj))
     return json.dumps(sorted(primary_keys))
 

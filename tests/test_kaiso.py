@@ -65,7 +65,7 @@ class TestFields(object):
         manager.save(item)
 
         create_translation_for_entity(
-            session, 'english', item, 'name', 'English name')
+            session, manager, 'english', item, 'name', 'English name')
         translation = session.query(ConcreteTranslation).one()
         expected_context = "taal:kaiso_field:CustomFieldsEntity:name"
         expected_message_id = json.dumps([("customfieldsentity", "id", 0)])
@@ -76,7 +76,7 @@ class TestFields(object):
     def test_multiple_uniques(self, manager):
         item = MultipleUniques()
         manager.save(item)
-        message_id = get_message_id(item)
+        message_id = get_message_id(manager, item)
         expected_message_id = json.dumps([
             ("multipleuniques", "id1", 1),
             ("multipleuniques", "id2", 1),
@@ -88,10 +88,10 @@ class TestFields(object):
         manager.save(item)
 
         create_translation_for_entity(
-            session, 'english', item, 'name', 'English name')
+            session, manager, 'english', item, 'name', 'English name')
 
-        context = get_context(item, 'name')
-        message_id = get_message_id(item)
+        context = get_context(manager, item, 'name')
+        message_id = get_message_id(manager, item)
         translatable = TranslatableString(
             context=context, message_id=message_id)
 
