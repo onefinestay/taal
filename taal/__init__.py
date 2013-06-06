@@ -12,9 +12,10 @@ except:  # pragma: no cover
 
 
 class TranslatableString(object):
-    def __init__(self, context=None, message_id=None):
+    def __init__(self, context=None, message_id=None, value=None):
         self.context = context
         self.message_id = message_id
+        self.value = value
 
     def __repr__(self):
         return "<TranslatableString: ({}, {})>".format(
