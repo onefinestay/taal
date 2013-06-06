@@ -40,7 +40,8 @@ def session(request):
     def drop_and_recreate_db():
         server, db_name = connection_string.rsplit('/', 1)
         engine = create_engine(server)
-        query = 'DROP DATABASE IF EXISTS {0}; CREATE DATABASE {0}'.format(db_name)
+        query = 'DROP DATABASE IF EXISTS {0}; CREATE DATABASE {0}'.format(
+            db_name)
         engine.execute(query)
 
     engine = create_engine(connection_string)
