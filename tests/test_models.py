@@ -5,6 +5,7 @@ import pytest
 from taal import Translator, TranslatableString
 
 from tests.models import ConcreteTranslation
+from tests.helpers import get_session
 
 
 @pytest.mark.usefixtures('manager')
@@ -80,3 +81,40 @@ class TestModels(object):
             'list': [1, 'str', 'translation'],
             'translatable': 'translation',
         }
+
+
+@pytest.mark.usefixtures('manager')
+class TestWriting(object):
+    def test_set_translation(self, session):
+        translator = Translator(ConcreteTranslation, session, 'language')
+        params = {
+            'context': 'context',
+            'message_id': 'message_id',
+        }
+        translatable = TranslatableString(value='translation', **params)
+        translator.set_translation(translatable)
+
+        read_translatable = TranslatableString(**params)
+        translation = translator.translate(read_translatable)
+        assert translation == 'translation'
+
+    def test_update_translation(self, session):
+        translator = Translator(ConcreteTranslation, session, 'language')
+        params = {
+            'context': 'context',
+            'message_id': 'message_id',
+        }
+        translatable = TranslatableString(value='translation', **params)
+        translator.set_translation(translatable)
+
+        with get_session() as new_session:
+            new_translator = Translator(
+                ConcreteTranslation, new_session, 'language')
+            new_translatable = TranslatableString(
+                value='new translation', **params)
+            new_translator.set_translation(new_translatable)
+
+        read_translatable = TranslatableString(**params)
+        translation = translator.translate(read_translatable)
+        assert translation == 'new translation'
+        assert session.query(ConcreteTranslation).count() == 1

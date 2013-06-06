@@ -73,6 +73,21 @@ class Translator(object):
         else:
             return translatable
 
+    def set_translation(self, translatable, commit=True):
+        translation = self.model(
+            context=translatable.context,
+            message_id=translatable.message_id,
+            language=self.language
+        )
+
+        # we can use merge for 'on duplicate key update'
+        # (only works in sqla if we're matching on the primary key)
+        translation = self.session.merge(translation)
+        translation.value = translatable.value
+
+        if commit:
+            self.session.commit()
+
 
 class TranslationContextManager(object):
     """ Knows all available ``message_id``s for a given context """
