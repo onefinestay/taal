@@ -3,10 +3,9 @@ from __future__ import absolute_import
 import json
 
 from kaiso.attributes import String
+from kaiso.types import get_type_id
 
-from taal import (
-    TranslationContextManager, translation_manager,
-    TranslatableString as TaalTranslatableString)
+from taal import TranslationContextManager, translation_manager
 
 
 class TypeTranslationContextManager(TranslationContextManager):
@@ -26,8 +25,7 @@ translation_manager.register(TypeTranslationContextManager)
 
 
 def get_context(manager, obj, attribute_name):
-    data = manager.serialize(obj)
-    type_id = data['__type__']
+    type_id = get_type_id(type(obj))
     return "taal:kaiso_field:{}:{}".format(type_id, attribute_name)
 
 
@@ -46,8 +44,3 @@ class TranslatableString(String):
             raise RuntimeError(
                 "Cannot save directly to translated fields. "
                 "Value was '{}'".format(value))
-
-    @staticmethod
-    def to_python(value):
-        """ Not needed until we allow data in this field """
-        return TaalTranslatableString()
