@@ -36,7 +36,7 @@ def _create_translation(
         context=context,
         message_id=message_id,
         language=language,
-        translation=translation_str)
+        value=translation_str)
     session.add(translation)
     session.commit()
 
