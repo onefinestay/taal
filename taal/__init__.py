@@ -21,6 +21,11 @@ class TranslatableString(object):
         return "<TranslatableString: ({}, {})>".format(
             self.context, self.message_id)
 
+    def __eq__(self, other):
+        self_dict = getattr(self, '__dict__', None)
+        other_dict = getattr(other, '__dict__', None)
+        return self_dict == other_dict
+
 
 class Translator(object):
     def __init__(self, model, session, language):
