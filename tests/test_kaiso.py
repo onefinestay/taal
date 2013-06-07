@@ -39,6 +39,8 @@ class TestKaiso(object):
             ('taal:kaiso_type', 'Entity'),
             ('taal:kaiso_type', 'Animal'),
             ('taal:kaiso_type', 'Fish'),
+            ('taal:kaiso_attr', '["Animal", "id"]'),
+            ('taal:kaiso_attr', '["Animal", "name"]'),
         ])
 
 
