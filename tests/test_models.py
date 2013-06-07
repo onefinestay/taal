@@ -82,6 +82,24 @@ class TestModels(object):
             'translatable': 'translation',
         }
 
+    def test_case_sensitivity(self, session):
+        translation_lower = ConcreteTranslation(
+            context='context', message_id='message_id',
+            language='language', value='translation')
+        translation_upper = ConcreteTranslation(
+            context='CONTEXT', message_id='message_id',
+            language='language', value='translation')
+        session.add(translation_upper)
+        session.add(translation_lower)
+        session.commit()
+
+        translator = Translator(ConcreteTranslation, session, 'language')
+        translatable = TranslatableString(
+            context='context', message_id='message_id')
+
+        # this shuold just not raise
+        translator.translate(translatable)
+
 
 @pytest.mark.usefixtures('manager')
 class TestWriting(object):
