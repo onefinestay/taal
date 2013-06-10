@@ -38,15 +38,11 @@ class Translator(object):
         context = translatable.context
         message_id = translatable.message_id
 
-        context_col = getattr(self.model, 'context')
-        message_id_col = getattr(self.model, 'message_id')
-        language_col = getattr(self.model, 'language')
-
         try:
-            translation = self.session.query(self.model).filter(
-                context_col == context,
-                message_id_col == message_id,
-                language_col == self.language
+            translation = self.session.query(self.model).filter_by(
+                context=context,
+                message_id=message_id,
+                language=self.language
             ).one()
             return translation.value
         except NoResultFound:
