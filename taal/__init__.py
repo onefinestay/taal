@@ -18,8 +18,8 @@ class TranslatableString(object):
         self.value = value
 
     def __repr__(self):
-        return "<TranslatableString: ({}, {})>".format(
-            self.context, self.message_id)
+        return "<TranslatableString: ({}, {}, {})>".format(
+            self.context, self.message_id, self.value)
 
     def __eq__(self, other):
         self_dict = getattr(self, '__dict__', None)
@@ -70,6 +70,11 @@ class Translator(object):
             return translatable
 
     def set_translation(self, translatable, commit=True):
+        if translatable.message_id is None:
+            raise RuntimeError(
+                "Cannot save translatable '{}'. "
+                "Message id is None".format(translatable))
+
         translation = self.model(
             context=translatable.context,
             message_id=translatable.message_id,
@@ -80,6 +85,16 @@ class Translator(object):
         # (only works in sqla if we're matching on the primary key)
         translation = self.session.merge(translation)
         translation.value = translatable.value
+
+        if commit:
+            self.session.commit()
+
+    def delete_translation(self, translatable, commit=True):
+        self.session.query(self.model).filter_by(
+            context=translatable.context,
+            message_id=translatable.message_id,
+            language=self.language
+        ).delete()
 
         if commit:
             self.session.commit()

@@ -11,8 +11,12 @@ def get_session():
 
     engine = create_engine(connection_string)
     session_cls = sessionmaker(bind=engine)
+
     session = session_cls()
 
-    yield session
-
-    session.close()
+    try:
+        yield session
+    finally:
+        session.close()
+        # make session unuseable
+        session.__dict__ = {}

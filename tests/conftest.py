@@ -52,6 +52,8 @@ def session(request):
 
     def teardown():
         session.close()
+        # make session unuseable
+        session.__dict__ = {}
 
     request.addfinalizer(teardown)
     return session
