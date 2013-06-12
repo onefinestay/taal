@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 
@@ -37,6 +38,18 @@ class Translator(object):
         self.session = session
         self.language = language
         self.debug_output = debug_output
+
+    def bind(self, target):
+        """ register e.g. a sqlalchey session or a kaiso manager """
+        if isinstance(target, Session):
+            from taal.sqlalchemy.events import (
+                register_translator, register_session)
+            register_translator(target, self)
+            register_session(target)
+        # elif isinstance(target, TaalManager):
+            # pass
+        else:
+            raise RuntimeError("Unknown target {}".format(target))
 
     def _translate(self, translatable):
         context = translatable.context

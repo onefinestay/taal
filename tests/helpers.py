@@ -4,6 +4,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from taal import Translator
+
 
 @contextmanager
 def get_session():
@@ -20,3 +22,9 @@ def get_session():
         session.close()
         # make session unuseable
         session.__dict__ = {}
+
+
+@contextmanager
+def get_translator(model, language):
+    with get_session() as translator_session:
+        yield Translator(model, translator_session, language)

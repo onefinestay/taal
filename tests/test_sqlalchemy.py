@@ -4,14 +4,13 @@ import pytest
 from sqlalchemy.exc import StatementError
 
 from taal import Translator, TranslatableString
-from taal.sqlalchemy import register_for_translation
 from taal.sqlalchemy.events import flush_log
 from taal.sqlalchemy.types import get_context, get_message_id
 
 from tests.models import (
     CustomFields, ConcreteTranslation, create_translation_for_model)
 
-from tests.helpers import get_session
+from tests.helpers import get_session, get_translator
 
 
 fixture = pytest.mark.usesfixtures('session')
@@ -125,9 +124,8 @@ class TestMagic(object):
     def test_refresh_with_value(self, session):
         instance = CustomFields(name='name')
 
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             session.add(instance)
             session.commit()
@@ -140,9 +138,8 @@ class TestMagic(object):
     def test_query(self, session):
         instance = CustomFields(name='name')
 
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             session.add(instance)
             session.commit()
@@ -155,9 +152,9 @@ class TestMagic(object):
             assert translation.value == 'name'
 
     def test_modify(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
+
             instance = CustomFields(name='a')
             session.add(instance)
             session.commit()
@@ -183,9 +180,8 @@ class TestMagic(object):
         assert isinstance(loaded.name, TranslatableString)
 
     def test_save(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance = CustomFields(name='name')
             session.add(instance)
@@ -195,9 +191,8 @@ class TestMagic(object):
             ConcreteTranslation.value) == 'name'
 
     def test_save_none(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance = CustomFields()
             session.add(instance)
@@ -220,31 +215,28 @@ class TestMagic(object):
             value="fr name"
         ))
 
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            with get_translator(ConcreteTranslation, 'fr') as translator_fr:
+                translator.bind(session)
 
-            instance_en = CustomFields(name='new en name')
-            session.add(instance_en)
-            session.commit()
-            id_ = instance_en.id
+                instance_en = CustomFields(name='new en name')
+                session.add(instance_en)
+                session.commit()
+                id_ = instance_en.id
 
-            translator = register_for_translation(
-                session, translator_session, ConcreteTranslation, 'fr')
-            instance_fr = session.query(CustomFields).get(id_)
-            assert translator.translate(instance_fr.name) == 'fr name'
+                instance_fr = session.query(CustomFields).get(id_)
+                assert translator_fr.translate(instance_fr.name) == 'fr name'
 
-            values = session.query(ConcreteTranslation).values(
-                ConcreteTranslation.language, ConcreteTranslation.value)
-            assert set(values) == set([
-                ('en', 'new en name'),
-                ('fr', 'fr name'),
-            ])
+                values = session.query(ConcreteTranslation).values(
+                    ConcreteTranslation.language, ConcreteTranslation.value)
+                assert set(values) == set([
+                    ('en', 'new en name'),
+                    ('fr', 'fr name'),
+                ])
 
     def test_update(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance = CustomFields(name='name')
             session.add(instance)
@@ -254,9 +246,8 @@ class TestMagic(object):
                 session.query(CustomFields).update({'name': 'updated_name'})
 
     def test_flushing(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance = CustomFields(name='name')
             session.add(instance)
@@ -266,9 +257,8 @@ class TestMagic(object):
             assert instance.name is not None
 
     def test_deleting(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance = CustomFields(name='name')
             session.add(instance)
@@ -292,12 +282,11 @@ class TestMagic(object):
 class TestSavepoints(object):
     def test_verify(self, session):
         # check the test setup works
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             assert session not in flush_log
-            assert translator_session not in flush_log
+            assert translator.session not in flush_log
 
             instance1 = CustomFields(name='instance 1')
             session.add(instance1)
@@ -315,9 +304,8 @@ class TestSavepoints(object):
             assert session.query(ConcreteTranslation).count() == 2
 
     def test_savepoints(self, session):
-        with get_session() as translator_session:
-            register_for_translation(
-                session, translator_session, ConcreteTranslation, 'en')
+        with get_translator(ConcreteTranslation, 'en') as translator:
+            translator.bind(session)
 
             instance1 = CustomFields(name='instance 1')
             session.add(instance1)
