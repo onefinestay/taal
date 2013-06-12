@@ -101,10 +101,8 @@ def _before_flush(session, flush_context, instances):
         for column in mapper.columns:
             if isinstance(column.type, TranslatableString):
                 value = getattr(target, column.name)
-                try:
-                    _flush_log[session].append((target, column, value.value))
-                except KeyError:
-                    _flush_log[session] = [(target, column, value.value)]
+                _flush_log.setdefault(session, []).append(
+                    (session.transaction, target, column, value.value))
                 _pending_translatables.add(value)
 
     for target in session.deleted:
@@ -117,10 +115,17 @@ def _before_flush(session, flush_context, instances):
 
 
 def _after_commit(session):
-    for target, column, value in _flush_log.pop(session, []):
+    for transaction, target, column, value in _flush_log.pop(session, []):
         translator = get_translator(session)
         translatable = make_from_obj(target, column.name, value)
         translator.set_translation(translatable, commit=True)
+
+
+def _after_soft_rollback(session, previous_transaction):
+    if session in _flush_log:
+        _flush_log[session] = [
+            pending for pending in _flush_log[session]
+            if pending[0] != previous_transaction]
 
 
 def _register_listeners(mapper, cls):
@@ -155,3 +160,4 @@ def register_for_translation(session, translator_session, model, language):
     register_translator(session, translator)
     event.listen(session, 'before_flush', _before_flush)
     event.listen(session, 'after_commit', _after_commit)
+    event.listen(session, 'after_soft_rollback', _after_soft_rollback)

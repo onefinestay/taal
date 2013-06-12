@@ -5,7 +5,7 @@ from sqlalchemy.exc import StatementError
 
 from taal import Translator, TranslatableString
 from taal.sqlalchemy import (
-    get_context, get_message_id, register_for_translation)
+    get_context, get_message_id, register_for_translation, _flush_log)
 
 from tests.models import (
     CustomFields, ConcreteTranslation, create_translation_for_model)
@@ -225,3 +225,51 @@ class TestMagic(object):
 
     def test_bulk_update(self):
         """ TODO (?) """
+
+
+class TestSavepoints(object):
+    def test_verify(self, session):
+        # check the test setup works
+        with get_session() as translator_session:
+            register_for_translation(
+                session, translator_session, ConcreteTranslation, 'en')
+
+            assert session not in _flush_log
+            assert translator_session not in _flush_log
+
+            instance1 = CustomFields(name='instance 1')
+            session.add(instance1)
+
+            session.flush()
+            assert session in _flush_log
+            assert len(_flush_log[session]) == 1
+            session.commit()
+            assert session not in _flush_log
+
+            instance2 = CustomFields(name='instance 2')
+            session.add(instance2)
+            session.commit()
+            assert session not in _flush_log
+            assert session.query(ConcreteTranslation).count() == 2
+
+    def test_savepoints(self, session):
+        with get_session() as translator_session:
+            register_for_translation(
+                session, translator_session, ConcreteTranslation, 'en')
+
+            instance1 = CustomFields(name='instance 1')
+            session.add(instance1)
+
+            session.begin_nested()
+
+            instance2 = CustomFields(name='instance 2')
+            session.add(instance2)
+            session.flush()
+            assert session in _flush_log
+            assert len(_flush_log[session]) == 2
+
+            session.rollback()
+            session.commit()
+
+            assert session.query(CustomFields).count() == 1
+            assert session.query(ConcreteTranslation).count() == 1
