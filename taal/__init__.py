@@ -28,11 +28,11 @@ class TranslatableString(object):
 
 
 class Translator(object):
-    def __init__(self, model, session, language, fail_if_missing=True):
+    def __init__(self, model, session, language, debug_output=False):
         self.model = model
         self.session = session
         self.language = language
-        self.fail_if_missing = fail_if_missing  # TODO: something better?
+        self.debug_output = debug_output
 
     def _translate(self, translatable):
         context = translatable.context
@@ -46,12 +46,11 @@ class Translator(object):
             ).one()
             return translation.value
         except NoResultFound:
-            if self.fail_if_missing:
-                raise KeyError("No translation found for ({}, {}, {})".format(
-                    self.language, context, message_id))
-            else:
+            if self.debug_output:
                 return "[Translation missing ({}, {}, {})]".format(
                     self.language, context, message_id)
+            else:
+                return None
 
     def translate(self, translatable):
         if isinstance(translatable, TranslatableString):

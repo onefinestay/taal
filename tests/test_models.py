@@ -44,17 +44,17 @@ class TestModels(object):
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
-        with pytest.raises(KeyError):
-            translator.translate(translatable)
+        translation = translator.translate(translatable)
+        translation is None
 
-    def test_translate_missing_ignore(self, session):
+    def test_translate_missing_debug(self, session):
         translator = Translator(
-            ConcreteTranslation, session, 'language', fail_if_missing=False)
+            ConcreteTranslation, session, 'language', debug_output=True)
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
         translation = translator.translate(translatable)
-        assert "Translation missing" in translation
+        assert "[Translation missing" in translation
 
     def test_translate_structure(self, session):
         translation = ConcreteTranslation(

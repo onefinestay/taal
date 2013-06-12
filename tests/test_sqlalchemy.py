@@ -62,10 +62,19 @@ def test_delete(session):
     message_id = get_message_id(model)
     translatable = TranslatableString(context=context, message_id=message_id)
 
-    translator = Translator(ConcreteTranslation, session, 'english')
+    translator = Translator(
+        ConcreteTranslation, session, 'english', debug_output=True)
     translator.delete_translation(translatable)
-    with pytest.raises(KeyError):
-        translator.translate(translatable)
+
+    translation = translator.translate(translatable)
+    assert "[Translation missing" in translation
+
+
+def test_save_empty(session):
+    translatable = TranslatableString()
+    translator = Translator(ConcreteTranslation, session, 'english')
+    with pytest.raises(RuntimeError):
+        translator.set_translation(translatable)
 
 
 class TestMagic(object):
