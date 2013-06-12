@@ -152,6 +152,18 @@ class TestMagic(object):
         assert session.query(ConcreteTranslation).value(
             ConcreteTranslation.value) == 'name'
 
+    def test_save_none(self, session):
+        with get_session() as translator_session:
+            register_for_translation(
+                session, translator_session, ConcreteTranslation, 'en')
+
+            instance = CustomFields()
+            session.add(instance)
+            session.commit()
+
+        assert session.query(ConcreteTranslation).value(
+            ConcreteTranslation.value) is None
+
     def test_change_language(self, session):
         session.add(ConcreteTranslation(
             context=get_context(CustomFields(), 'name'),

@@ -65,9 +65,11 @@ def before_flush(session, flush_context, instances):
         for column in mapper.columns:
             if isinstance(column.type, TranslatableString):
                 value = getattr(target, column.name)
+                if value is not None:
+                    pending_translatables.add(value)
+                    value = value.value
                 flush_log.setdefault(session, []).append(
-                    (session.transaction, target, column, value.value))
-                pending_translatables.add(value)
+                    (session.transaction, target, column, value))
 
     for target in session.deleted:
         mapper = inspect(target.__class__)
