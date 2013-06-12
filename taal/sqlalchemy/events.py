@@ -21,14 +21,19 @@ def get_translator(owner):
 
 
 def set_(target, value, oldvalue, initiator):
-    if value is None:
-        return value
-
     if isinstance(value, TaalTranslatableString):
         return value
 
     translatable = make_from_obj(target, initiator.key, value)
     return translatable
+
+
+def init(target, args, kwargs):
+    mapper = inspect(target.__class__)
+    for column in mapper.columns:
+        if isinstance(column.type, TranslatableString):
+            if column.name not in kwargs:
+                kwargs[column.name] = None
 
 
 def load(target, context):
@@ -51,7 +56,11 @@ def refresh(target, args, attrs):
 
 
 def before_flush(session, flush_context, instances):
+    # instances arg is from a deprecated api
+
     for target in session.dirty:
+        if not session.is_modified(target):
+            continue
         mapper = inspect(target.__class__)
         for column in mapper.columns:
             if isinstance(column.type, TranslatableString):
@@ -86,6 +95,10 @@ def after_commit(session):
         translatable = make_from_obj(target, column.name, value)
         translator.set_translation(translatable, commit=True)
 
+        old_value = getattr(target, column.name)
+        old_value.context = translatable.context
+        old_value.message_id = translatable.message_id
+
 
 def after_soft_rollback(session, previous_transaction):
     if session in flush_log:
@@ -94,9 +107,11 @@ def after_soft_rollback(session, previous_transaction):
             if pending[0] != previous_transaction]
 
 
+@event.listens_for(Mapper, 'mapper_configured')
 def register_listeners(mapper, cls):
     for column in mapper.columns:
         if isinstance(column.type, TranslatableString):
+            event.listen(cls, 'init', init)
             event.listen(cls, 'load', load)
             event.listen(cls, 'refresh', refresh)
 
@@ -108,6 +123,3 @@ def register_session(session):
     event.listen(session, 'before_flush', before_flush)
     event.listen(session, 'after_commit', after_commit)
     event.listen(session, 'after_soft_rollback', after_soft_rollback)
-
-
-event.listen(Mapper, 'mapper_configured', register_listeners)

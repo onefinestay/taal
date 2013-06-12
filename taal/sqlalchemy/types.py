@@ -14,7 +14,7 @@ class TranslatableString(types.TypeDecorator):
     impl = types.String
 
     def process_bind_param(self, value, dialect):
-        if value is None:
+        if value.is_unset():
             return None
 
         if value in pending_translatables:

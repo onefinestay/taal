@@ -91,7 +91,7 @@ class TestMagic(object):
     def test_set_none(self):
         instance = CustomFields()
         instance.name = None
-        assert instance.name is None
+        assert isinstance(instance.name, TranslatableString)
 
     def test_set_from_other(self):
         first = CustomFields(name='name')
@@ -103,6 +103,10 @@ class TestMagic(object):
         first = CustomFields(name='name')
         second = CustomFields(name=first.name)
         assert isinstance(second.name, TranslatableString)
+
+    def test_init_from_none(self):
+        instance = CustomFields()
+        assert isinstance(instance.name, TranslatableString)
 
     def test_change_from_init(self):
         instance = CustomFields(name='a')
@@ -130,6 +134,44 @@ class TestMagic(object):
 
             loaded = session.query(CustomFields).get(instance.id)
             assert isinstance(loaded.name, TranslatableString)
+            translation = session.query(ConcreteTranslation).one()
+            assert translation.value == 'name'
+
+    def test_query(self, session):
+        instance = CustomFields(name='name')
+
+        with get_session() as translator_session:
+            register_for_translation(
+                session, translator_session, ConcreteTranslation, 'en')
+
+            session.add(instance)
+            session.commit()
+
+            loaded = session.query(CustomFields).filter(
+                CustomFields.id == instance.id).one()
+            assert isinstance(loaded.name, TranslatableString)
+            session.close()
+            translation = session.query(ConcreteTranslation).one()
+            assert translation.value == 'name'
+
+    def test_modify(self, session):
+        with get_session() as translator_session:
+            register_for_translation(
+                session, translator_session, ConcreteTranslation, 'en')
+            instance = CustomFields(name='a')
+            session.add(instance)
+            session.commit()
+
+            with get_session() as translator_session:
+                assert translator_session.query(ConcreteTranslation).value(
+                    ConcreteTranslation.value) == 'a'
+
+            instance.name = 'b'
+            session.commit()
+
+            with get_session() as translator_session:
+                assert translator_session.query(ConcreteTranslation).value(
+                    ConcreteTranslation.value) == 'b'
 
     def test_load(self, session):
         instance = CustomFields()

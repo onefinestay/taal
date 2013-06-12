@@ -17,6 +17,10 @@ class TranslatableString(object):
         self.message_id = message_id
         self.value = value
 
+    def is_unset(self):
+        """ The "empty" TranslatableString """
+        return (self.message_id is None and self.value is None)
+
     def __repr__(self):
         return "<TranslatableString: ({}, {}, {})>".format(
             self.context, self.message_id, self.value)

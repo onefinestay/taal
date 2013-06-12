@@ -7,8 +7,10 @@ from taal.sqlalchemy.types import TranslatableString, make_from_obj
 __all__ = ['TranslatableString', 'make_from_obj', 'register_for_translation']
 
 
-def register_for_translation(session, translator_session, model, language):
-    translator = Translator(model, translator_session, language)
+def register_for_translation(
+        session, translator_session, model, language, debug_output=False):
+    translator = Translator(
+        model, translator_session, language, debug_output=debug_output)
     register_translator(session, translator)
     register_session(session)
     return translator
