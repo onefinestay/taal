@@ -41,13 +41,15 @@ class Translator(object):
 
     def bind(self, target):
         """ register e.g. a sqlalchey session or a kaiso manager """
+        from taal.kaiso import manager
+
         if isinstance(target, Session):
             from taal.sqlalchemy.events import (
                 register_translator, register_session)
             register_translator(target, self)
             register_session(target)
-        # elif isinstance(target, TaalManager):
-            # pass
+        elif isinstance(target, manager.Manager):
+            manager.register_translator(target, self)
         else:
             raise RuntimeError("Unknown target {}".format(target))
 

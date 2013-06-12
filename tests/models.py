@@ -7,6 +7,7 @@ from kaiso.attributes import Integer as KaisoInteger, String as KaisoString
 
 from taal.models import TranslationMixin
 from taal import kaiso as taal_kaiso, sqlalchemy as taal_sqlalchemy
+from taal.kaiso import types as taal_kaiso_types
 from taal.sqlalchemy import types as taal_sqlalchemy_types
 
 
@@ -52,7 +53,7 @@ def create_translation_for_model(
 
 def create_translation_for_entity(
         session, manager, language, obj, field, translation_str):
-    context = taal_kaiso.get_context(manager, obj, field)
-    message_id = taal_kaiso.get_message_id(manager, obj)
+    context = taal_kaiso_types.get_context(manager, obj, field)
+    message_id = taal_kaiso_types.get_message_id(manager, obj)
     return _create_translation(
         session, language, context, message_id, translation_str)

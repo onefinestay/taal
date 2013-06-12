@@ -29,6 +29,16 @@ def manager(request):
 
 
 @pytest.fixture
+def translating_manager(request):
+    from taal.kaiso.manager import Manager
+
+    neo4j_uri = request.config.getoption('neo4j_uri')
+    Manager(neo4j_uri).destroy()
+    manager = Manager(neo4j_uri)
+    return manager
+
+
+@pytest.fixture
 def session(request):
     # importing at the module level messes up coverage
     from tests.models import Base

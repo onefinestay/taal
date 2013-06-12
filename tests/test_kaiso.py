@@ -7,8 +7,8 @@ from kaiso.types import Entity
 from kaiso.attributes import Integer
 
 from taal import translation_manager, TranslatableString, Translator
-from taal.kaiso import (
-    TypeTranslationContextManager, get_context, get_message_id)
+from taal.kaiso.context_managers import TypeTranslationContextManager
+from taal.kaiso.types import get_context, get_message_id, make_from_obj
 
 from tests.kaiso import Fish
 from tests.models import (
@@ -101,3 +101,10 @@ class TestFields(object):
         translated_data = translator.translate(translatable)
 
         assert translated_data == 'English name'
+
+
+def test_make_from_obj(manager):
+    obj = CustomFieldsEntity(id=1)
+    translatable = make_from_obj(manager, obj, 'name', 'English name')
+    assert translatable.message_id == '[["customfieldsentity", "id", 1]]'
+    assert translatable.value == 'English name'
