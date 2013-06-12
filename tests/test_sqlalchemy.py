@@ -4,8 +4,9 @@ import pytest
 from sqlalchemy.exc import StatementError
 
 from taal import Translator, TranslatableString
-from taal.sqlalchemy import (
-    get_context, get_message_id, register_for_translation, _flush_log)
+from taal.sqlalchemy import register_for_translation
+from taal.sqlalchemy.events import flush_log
+from taal.sqlalchemy.types import get_context, get_message_id
 
 from tests.models import (
     CustomFields, ConcreteTranslation, create_translation_for_model)
@@ -243,22 +244,22 @@ class TestSavepoints(object):
             register_for_translation(
                 session, translator_session, ConcreteTranslation, 'en')
 
-            assert session not in _flush_log
-            assert translator_session not in _flush_log
+            assert session not in flush_log
+            assert translator_session not in flush_log
 
             instance1 = CustomFields(name='instance 1')
             session.add(instance1)
 
             session.flush()
-            assert session in _flush_log
-            assert len(_flush_log[session]) == 1
+            assert session in flush_log
+            assert len(flush_log[session]) == 1
             session.commit()
-            assert session not in _flush_log
+            assert session not in flush_log
 
             instance2 = CustomFields(name='instance 2')
             session.add(instance2)
             session.commit()
-            assert session not in _flush_log
+            assert session not in flush_log
             assert session.query(ConcreteTranslation).count() == 2
 
     def test_savepoints(self, session):
@@ -274,8 +275,8 @@ class TestSavepoints(object):
             instance2 = CustomFields(name='instance 2')
             session.add(instance2)
             session.flush()
-            assert session in _flush_log
-            assert len(_flush_log[session]) == 2
+            assert session in flush_log
+            assert len(flush_log[session]) == 2
 
             session.rollback()
             session.commit()
