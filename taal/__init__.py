@@ -5,6 +5,8 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
+from taal.exceptions import BindError
+
 
 try:
     VERSION = __import__('pkg_resources').get_distribution('taal').version
@@ -51,7 +53,7 @@ class Translator(object):
         elif isinstance(target, manager.Manager):
             manager.register_translator(target, self)
         else:
-            raise RuntimeError("Unknown target {}".format(target))
+            raise BindError("Unknown target {}".format(target))
 
     def _translate(self, translatable):
         context = translatable.context

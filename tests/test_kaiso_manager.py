@@ -1,4 +1,7 @@
+import pytest
+
 from taal import TranslatableString
+from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso.context_managers import TypeTranslationContextManager
 
 from tests.helpers import get_translator
@@ -76,3 +79,9 @@ class TestKaiso(object):
             serialized = manager.serialize(retrieved)
             translated = translator.translate(serialized)
             assert translated['name'] == 'English name'
+
+    def test_missing_bind(self, session, translating_manager):
+        manager = translating_manager
+        obj = CustomFieldsEntity(id=1, name='English name')
+        with pytest.raises(NoTranslatorRegistered):
+            manager.save(obj)

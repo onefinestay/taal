@@ -3,6 +3,7 @@ from weakref import WeakKeyDictionary
 from kaiso.persistence import Manager as KaisoManager
 
 from taal import TranslatableString as TaalTranslatableString
+from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso import TranslatableString
 from taal.kaiso.context_managers import (
     AttributeTranslationContextManager, TypeTranslationContextManager)
@@ -17,7 +18,11 @@ def register_translator(owner, translator):
 
 
 def get_translator(owner):
-    return translator_registry[owner]
+    try:
+        return translator_registry[owner]
+    except KeyError:
+        raise NoTranslatorRegistered(
+            "No translator registered for {}".format(owner))
 
 
 def _label_attributes(type_id, attrs):
