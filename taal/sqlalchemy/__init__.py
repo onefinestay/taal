@@ -11,3 +11,4 @@ def register_for_translation(session, translator_session, model, language):
     translator = Translator(model, translator_session, language)
     register_translator(session, translator)
     register_session(session)
+    return translator

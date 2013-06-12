@@ -175,11 +175,9 @@ class TestMagic(object):
             session.commit()
             id_ = instance_en.id
 
-            register_for_translation(
+            translator = register_for_translation(
                 session, translator_session, ConcreteTranslation, 'fr')
             instance_fr = session.query(CustomFields).get(id_)
-            translator = Translator(
-                ConcreteTranslation, translator_session, 'fr')
             assert translator.translate(instance_fr.name) == 'fr name'
 
             values = session.query(ConcreteTranslation).values(
