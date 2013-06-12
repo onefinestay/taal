@@ -70,18 +70,12 @@ def _load(target, context):
             setattr(target, column.name, translatable)
 
 
-def _refresh(target, args, kwargs):
+def _refresh(target, args, attrs):
     mapper = inspect(target.__class__)
-    for column_name in kwargs:
+    for column_name in attrs:
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
-            value = getattr(target, column.name)
-            if isinstance(value, TaalTranslatableString):
-                # TODO: is this reachable?
-                import ipdb
-                ipdb.set_trace()
-                continue
-            translatable = make_from_obj(target, column.name, value)
+            translatable = make_from_obj(target, column.name)
             setattr(target, column.name, translatable)
     return target
 
