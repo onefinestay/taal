@@ -14,3 +14,11 @@ flake8:
 	flake8
 
 test: pytest flake8
+
+docs/api/modules.rst: $(wildcard taal/**/*.py)
+	sphinx-apidoc -f -o docs/api taal
+
+audodoc: docs/api/modules.rst
+
+docs: audodoc
+	cd docs && make html
