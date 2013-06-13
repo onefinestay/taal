@@ -71,7 +71,7 @@ class Manager(KaisoManager):
             context = get_context(self, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)
-            translator.set_translation(translatable)
+            translator.save_translation(translatable)
         return saved
 
     def get_labeled_type_hierarchy(self, start_type_id=None):

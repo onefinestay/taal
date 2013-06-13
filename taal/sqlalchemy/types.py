@@ -22,7 +22,7 @@ class TranslatableString(types.TypeDecorator):
         else:
             raise RuntimeError(
                 "Cannot save directly to translated fields. "
-                "Use ``set_translation`` instead "
+                "Use ``save_translation`` instead "
                 "Value was '{}'".format(value))
 
 

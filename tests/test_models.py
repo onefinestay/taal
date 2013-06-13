@@ -103,14 +103,14 @@ class TestModels(object):
 
 @pytest.mark.usefixtures('manager')
 class TestWriting(object):
-    def test_set_translation(self, session):
+    def test_save_translation(self, session):
         translator = Translator(ConcreteTranslation, session, 'language')
         params = {
             'context': 'context',
             'message_id': 'message_id',
         }
         translatable = TranslatableString(value='translation', **params)
-        translator.set_translation(translatable)
+        translator.save_translation(translatable)
 
         read_translatable = TranslatableString(**params)
         translation = translator.translate(read_translatable)
@@ -123,14 +123,14 @@ class TestWriting(object):
             'message_id': 'message_id',
         }
         translatable = TranslatableString(value='translation', **params)
-        translator.set_translation(translatable)
+        translator.save_translation(translatable)
 
         with get_session() as new_session:
             new_translator = Translator(
                 ConcreteTranslation, new_session, 'language')
             new_translatable = TranslatableString(
                 value='new translation', **params)
-            new_translator.set_translation(new_translatable)
+            new_translator.save_translation(new_translatable)
 
         read_translatable = TranslatableString(**params)
         translation = translator.translate(read_translatable)

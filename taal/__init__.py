@@ -99,7 +99,7 @@ class Translator(object):
         else:
             return translatable
 
-    def set_translation(self, translatable, commit=True):
+    def save_translation(self, translatable, commit=True):
         if translatable.message_id is None:
             raise RuntimeError(
                 "Cannot save translatable '{}'. "

@@ -66,7 +66,7 @@ def before_flush(session, flush_context, instances):
             if isinstance(column.type, TranslatableString):
                 translator = get_translator(session)
                 value = getattr(target, column.name)
-                translator.set_translation(value, commit=True)
+                translator.save_translation(value, commit=True)
                 pending_translatables.add(value)
 
     for target in session.new:
@@ -93,7 +93,7 @@ def after_commit(session):
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
         translatable = make_from_obj(target, column.name, value)
-        translator.set_translation(translatable, commit=True)
+        translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
         old_value.context = translatable.context

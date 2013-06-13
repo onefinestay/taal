@@ -74,7 +74,7 @@ def test_save_empty(session):
     translatable = TranslatableString()
     translator = Translator(ConcreteTranslation, session, 'english')
     with pytest.raises(RuntimeError):
-        translator.set_translation(translatable)
+        translator.save_translation(translatable)
 
 
 class TestMagic(object):

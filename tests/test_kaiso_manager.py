@@ -55,7 +55,7 @@ class TestKaiso(object):
                 context=TypeTranslationContextManager.context,
                 message_id='Entity', value='English Entity')
 
-            translator.set_translation(translatable)
+            translator.save_translation(translatable)
             translator.bind(manager)
 
             hierarchy = manager.get_labeled_type_hierarchy()
