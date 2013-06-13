@@ -1,3 +1,8 @@
+""" Taal: Translations for SQLAlchemy and Kaiso models
+
+    Store and manage translations using SQLAlchemy
+"""
+
 from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -45,6 +50,18 @@ class TranslatableString(object):
 
 
 class Translator(object):
+    """ Manage a particular set of translations
+
+        Given a sqlalchemy session, a model to store translations, and
+        a language, bind a translator to a(n other) sqlalchemy session
+        and/or a kaiso manager to get translation magic
+
+        In addition to native data types, attributes will also include
+        instances of ``TranslatableString``. A translator may subsequently
+        be passed "structured" data (dicts, lists, tuples) containing
+        translatable strings and translate to a particular language
+    """
+
     def __init__(self, model, session, language, debug_output=False):
         self.model = model
         self.session = session
