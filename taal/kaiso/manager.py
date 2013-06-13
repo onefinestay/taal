@@ -26,6 +26,7 @@ def get_translator(owner):
 
 
 def _label_attributes(type_id, attrs):
+    labelled_attrs = []
     for attr in attrs:
         label = TaalTranslatableString(
             context=AttributeTranslationContextManager.context,
@@ -33,7 +34,8 @@ def _label_attributes(type_id, attrs):
                 type_id, attr)
         )
         attr.label = label
-        yield attr
+        labelled_attrs.append(attr)
+    return labelled_attrs
 
 
 class Manager(KaisoManager):
