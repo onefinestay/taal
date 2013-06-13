@@ -1,7 +1,6 @@
 from weakref import WeakKeyDictionary
 
 from sqlalchemy import event, inspect
-from sqlalchemy.orm.mapper import Mapper
 
 from taal import TranslatableString as TaalTranslatableString
 from taal.sqlalchemy.types import (
@@ -122,18 +121,6 @@ def after_soft_rollback(session, previous_transaction):
         flush_log[session] = [
             pending for pending in flush_log[session]
             if pending[0] != previous_transaction]
-
-
-@event.listens_for(Mapper, 'mapper_configured')
-def register_listeners(mapper, cls):
-    for column in mapper.columns:
-        if isinstance(column.type, TranslatableString):
-            event.listen(cls, 'init', init)
-            event.listen(cls, 'load', load)
-            event.listen(cls, 'refresh', refresh)
-
-            column_attr = getattr(cls, column.name)
-            event.listen(column_attr, 'set', set_, retval=True)
 
 
 def register_session(session):

@@ -1,7 +1,8 @@
 import json
 from weakref import WeakSet
 
-from sqlalchemy import inspect, types
+from sqlalchemy import event, inspect, types
+from sqlalchemy.orm.mapper import Mapper
 
 from taal import TranslatableString as TaalTranslatableString
 
@@ -48,3 +49,16 @@ def make_from_obj(obj, column, value=None):
         message_id=message_id,
         value=value
     )
+
+
+@event.listens_for(Mapper, 'mapper_configured')
+def register_listeners(mapper, cls):
+    for column in mapper.columns:
+        if isinstance(column.type, TranslatableString):
+            from taal.sqlalchemy import events
+            event.listen(cls, 'init', events.init)
+            event.listen(cls, 'load', events.load)
+            event.listen(cls, 'refresh', events.refresh)
+
+            column_attr = getattr(cls, column.name)
+            event.listen(column_attr, 'set', events.set_, retval=True)
