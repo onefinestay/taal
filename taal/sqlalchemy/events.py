@@ -21,6 +21,7 @@ def get_translator(owner):
 
 
 def set_(target, value, oldvalue, initiator):
+    """ Wrap any value in ``TranslatableString`` (including None) """
     if isinstance(value, TaalTranslatableString):
         return value
 
@@ -29,6 +30,9 @@ def set_(target, value, oldvalue, initiator):
 
 
 def init(target, args, kwargs):
+    """ If no value is passed to the constructor for a given translatable
+        column, ``set_`` isn't triggered. To make sure we wrap the None,
+        explicityly add it to the list of kwargs if missing """
     mapper = inspect(target.__class__)
     for column in mapper.columns:
         if isinstance(column.type, TranslatableString):
@@ -37,6 +41,7 @@ def init(target, args, kwargs):
 
 
 def load(target, context):
+    """ Wrap columns when loading data from the db """
     mapper = inspect(target.__class__)
     for column in mapper.columns:
         if isinstance(column.type, TranslatableString):
@@ -56,7 +61,17 @@ def refresh(target, args, attrs):
 
 
 def before_flush(session, flush_context, instances):
-    # instances arg is from a deprecated api
+    """ Queue up translations to be saved on commit. We don't want to
+        save them until commit, but by then we no longer know what's
+        changed. At this point we introspect the session to find added,
+        changed and deleted objects and save them, along with information
+        about the active session and transaction (to handle savepoint
+        rollbacks) to the queue (``flush_log``)
+
+
+        Notes:
+            The ``instances`` argument is from a deprecated api
+    """
 
     for target in session.dirty:
         if not session.is_modified(target):
@@ -90,6 +105,7 @@ def before_flush(session, flush_context, instances):
 
 
 def after_commit(session):
+    """ Save any pending translations for this session """
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
         translatable = make_from_obj(target, column.name, value)
@@ -101,6 +117,7 @@ def after_commit(session):
 
 
 def after_soft_rollback(session, previous_transaction):
+    """ Drop any pending translations from this transaction """
     if session in flush_log:
         flush_log[session] = [
             pending for pending in flush_log[session]

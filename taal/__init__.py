@@ -84,6 +84,11 @@ class Translator(object):
                 return None
 
     def translate(self, translatable):
+        """ Translate ``TranslatableString`` by looking up a translation
+
+            can also take a 'structure' (currently lists, and dicts)
+            and recursively translate any TranslatableStrings found.
+        """
         if isinstance(translatable, TranslatableString):
             return self._translate(translatable)
         elif isinstance(translatable, dict):
