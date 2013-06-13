@@ -15,6 +15,16 @@ except:  # pragma: no cover
 
 
 class TranslatableString(object):
+    """ Placeholder for a string to be translated
+
+
+        Holds metadata, ``context`` and ``message_id``, and optionally
+        a string ``value``
+
+        A ``TranslatableString`` with no ``message_id`` or ``value`` is
+        considered empty (``is_unset``)
+
+    """
     def __init__(self, context=None, message_id=None, value=None):
         self.context = context
         self.message_id = message_id
