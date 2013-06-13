@@ -195,7 +195,7 @@ class Translator(object):
 
 
 class TranslationContextManager(object):
-    """ Knows all available ``message_id``s for a given context """
+    """ Knows all available ``message_id``\s for a given context """
 
     __metaclass__ = ABCMeta
 
@@ -209,7 +209,7 @@ class TranslationContextManager(object):
 
 
 class TranslationManager(object):
-    """ Collection of ``TranslationContextManager``s """
+    """ Collection of ``TranslationContextManager``\s """
 
     def __init__(self):
         self._registry = {}
