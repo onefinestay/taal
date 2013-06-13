@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import tuple_
 
 from taal.exceptions import BindError
 
@@ -65,44 +65,86 @@ class Translator(object):
         else:
             raise BindError("Unknown target {}".format(target))
 
-    def _translate(self, translatable):
-        context = translatable.context
-        message_id = translatable.message_id
+    def _debug_message(self, translatable):
+        return "[Translation missing ({}, {}, {})]".format(
+            self.language, translatable.context, translatable.message_id)
 
+    def _translate(self, translatable, cache):
         try:
-            translation = self.session.query(self.model).filter_by(
-                context=context,
-                message_id=message_id,
-                language=self.language
-            ).one()
-            return translation.value
-        except NoResultFound:
+            return cache[(translatable.context, translatable.message_id)]
+        except KeyError:
             if self.debug_output:
-                return "[Translation missing ({}, {}, {})]".format(
-                    self.language, context, message_id)
-            else:
-                return None
+                return self._debug_message(translatable)
+            return None
 
-    def translate(self, translatable):
+    def translate(self, translatable, cache=None):
         """ Translate ``TranslatableString`` by looking up a translation
 
-            can also take a 'structure' (currently lists, and dicts)
+            can also take a 'structure' (currently lists, tuples, and dicts)
             and recursively translate any TranslatableStrings found.
         """
+
+        if cache is None:
+            cache = self._prepare_cache(translatable)
+
         if isinstance(translatable, TranslatableString):
-            return self._translate(translatable)
+            return self._translate(translatable, cache)
         elif isinstance(translatable, dict):
             return dict(
-                (key, self.translate(val))
+                (key, self.translate(val, cache))
                 for key, val in translatable.iteritems()
             )
         elif isinstance(translatable, list):
             return list(
-                self.translate(item)
+                self.translate(item, cache)
+                for item in translatable)
+        elif isinstance(translatable, tuple):
+            return tuple(
+                self.translate(item, cache)
                 for item in translatable)
 
         else:
             return translatable
+
+    def _prepare_cache(self, translatable):
+        """ Bulk load translations required to translate a translatable
+            'structure'
+
+        """
+        translatables = self._collect_translatables(translatable)
+        if not translatables:
+            return {}
+
+        pks = [(t.context, t.message_id) for t in translatables]
+        pk_filter = tuple_(self.model.context, self.model.message_id).in_(pks)
+        translations = self.session.query(self.model).filter(
+            self.model.language == self.language).filter(pk_filter).values(
+                self.model.context, self.model.message_id, self.model.value)
+        cache = {(t[0], t[1]): t[2] for t in translations}
+        return cache
+
+    def _collect_translatables(self, translatable, collection=None):
+        """ Run over a translatable 'structure' and collect any translatables
+
+            These are then bulk loaded from the db
+        """
+
+        if collection is None:
+            collection = []
+
+        if isinstance(translatable, TranslatableString):
+            collection.append(translatable)
+        elif isinstance(translatable, dict):
+            [self._collect_translatables(val, collection)
+                for val in translatable.itervalues()]
+        elif isinstance(translatable, list):
+            [self._collect_translatables(item, collection)
+                for item in translatable]
+        elif isinstance(translatable, tuple):
+            [self._collect_translatables(item, collection)
+                for item in translatable]
+
+        return collection
 
     def save_translation(self, translatable, commit=True):
         if translatable.message_id is None:
