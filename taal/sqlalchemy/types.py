@@ -15,6 +15,11 @@ class TranslatableString(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
+        if not isinstance(value, TaalTranslatableString):
+            # this should only happen if someone is trying to query
+            # TODO: verify this
+            raise RuntimeError("Cannot filter on translated fields")
+
         if value.is_unset():
             return None
 
