@@ -49,6 +49,10 @@ def get_message_id(obj):
 def make_from_obj(obj, column, value=None):
     context = get_context(obj, column)
     message_id = get_message_id(obj)
+    if value is None:
+        value = getattr(obj, column)
+        if isinstance(value, TaalTranslatableString):
+            value = value.value
     return TaalTranslatableString(
         context=context,
         message_id=message_id,
