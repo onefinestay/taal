@@ -12,7 +12,7 @@ pending_translatables = WeakSet()  # to aid debugging
 
 class TranslatableString(types.TypeDecorator):
 
-    impl = types.String
+    impl = types.Text
 
     def process_bind_param(self, value, dialect):
         if value.is_unset():
