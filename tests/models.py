@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from kaiso.types import Entity
 from kaiso.attributes import Integer as KaisoInteger, String as KaisoString
@@ -57,3 +58,21 @@ def create_translation_for_entity(
     message_id = taal_kaiso_types.get_message_id(manager, obj)
     return _create_translation(
         session, language, context, message_id, translation_str)
+
+
+class Parent(Base):
+    __tablename__ = "test_parent"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString(20))
+    identifier = Column(String(20))
+
+
+class Child(Base):
+    __tablename__ = "test_child"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString(20))
+    identifier = Column(String(20))
+    parent_id = Column(Integer, ForeignKey('test_parent.id'))
+    parent = relationship('Parent', backref='children')

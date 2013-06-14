@@ -52,6 +52,8 @@ def load(target, context):
 def refresh(target, args, attrs):
     mapper = inspect(target.__class__)
     for column_name in attrs:
+        if column_name not in mapper.columns:
+            continue
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
             translatable = make_from_obj(target, column.name)
