@@ -18,7 +18,7 @@ test: pytest flake8
 docs/api/modules.rst: $(wildcard taal/**/*.py)
 	sphinx-apidoc -f -o docs/api taal
 
-audodoc: docs/api/modules.rst
+autodoc: docs/api/modules.rst
 
-docs: audodoc
+docs: autodoc
 	cd docs && make html
