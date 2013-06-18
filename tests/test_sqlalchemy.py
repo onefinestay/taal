@@ -81,31 +81,37 @@ class TestMagic(object):
     def test_init(self):
         instance = CustomFields(name='name')
         assert isinstance(instance.name, TranslatableString)
+        assert not isinstance(instance.name.value, TranslatableString)
 
     def test_set(self):
         instance = CustomFields()
         instance.name = 'name'
         assert isinstance(instance.name, TranslatableString)
+        assert not isinstance(instance.name.value, TranslatableString)
 
     def test_set_none(self):
         instance = CustomFields()
         instance.name = None
         assert isinstance(instance.name, TranslatableString)
+        assert not isinstance(instance.name.value, TranslatableString)
 
     def test_set_from_other(self):
         first = CustomFields(name='name')
         second = CustomFields()
         second.name = first.name
         assert isinstance(second.name, TranslatableString)
+        assert not isinstance(second.name.value, TranslatableString)
 
     def test_init_from_other(self):
         first = CustomFields(name='name')
         second = CustomFields(name=first.name)
         assert isinstance(second.name, TranslatableString)
+        assert not isinstance(second.name.value, TranslatableString)
 
     def test_init_from_none(self):
         instance = CustomFields()
         assert isinstance(instance.name, TranslatableString)
+        assert not isinstance(instance.name.value, TranslatableString)
 
     def test_change_from_init(self):
         instance = CustomFields(name='a')
@@ -120,6 +126,7 @@ class TestMagic(object):
 
         loaded = session.query(CustomFields).get(instance.id)
         assert isinstance(loaded.name, TranslatableString)
+        assert not isinstance(loaded.name.value, TranslatableString)
 
     def test_refresh_with_value(self, session):
         instance = CustomFields(name='name')
@@ -178,6 +185,7 @@ class TestMagic(object):
         with get_session() as new_session:
             loaded = new_session.query(CustomFields).get(instance.id)
         assert isinstance(loaded.name, TranslatableString)
+        assert not isinstance(loaded.name.value, TranslatableString)
 
     def test_save(self, session):
         with get_translator(ConcreteTranslation, 'en') as translator:

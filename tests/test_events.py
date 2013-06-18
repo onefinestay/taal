@@ -1,5 +1,5 @@
 from tests.helpers import get_translator
-from tests.models import ConcreteTranslation, Parent, Child
+from tests.models import ConcreteTranslation, Parent, Child, CustomFields
 
 
 def test_refresh_with_relationship(session):
@@ -13,3 +13,12 @@ def test_refresh_with_relationship(session):
         session.commit()
 
         assert parent.children == [child]
+
+
+def test_merge_from_other_session(session):
+    """ regression test """
+
+    with get_translator(ConcreteTranslation, 'en') as translator:
+        translator.bind(session)
+        instance = CustomFields()
+        session.merge(instance)

@@ -20,16 +20,16 @@ except:  # pragma: no cover
 
 
 class TranslatableString(object):
-    """ Placeholder for a string to be translated
-
-
-        Holds metadata, ``context`` and ``message_id``, and optionally
-        a string ``value``
-
-        A ``TranslatableString`` with no ``message_id`` or ``value`` is
-        considered empty (``is_unset``)
-
     """
+    Placeholder for a string to be translated
+
+    Holds metadata, ``context`` and ``message_id``, and optionally
+    a string ``value``
+
+    A ``TranslatableString`` with no ``message_id`` or ``value`` is
+    considered empty (``is_unset``)
+    """
+
     def __init__(self, context=None, message_id=None, value=None):
         self.context = context
         self.message_id = message_id
@@ -50,16 +50,17 @@ class TranslatableString(object):
 
 
 class Translator(object):
-    """ Manage a particular set of translations
+    """
+    Manage a particular set of translations
 
-        Given a sqlalchemy session, a model to store translations, and
-        a language, bind a translator to a(n other) sqlalchemy session
-        and/or a kaiso manager to get translation magic
+    Given a sqlalchemy session, a model to store translations, and
+    a language, bind a translator to a(n other) sqlalchemy session
+    and/or a kaiso manager to get translation magic
 
-        In addition to native data types, attributes will also include
-        instances of ``TranslatableString``. A translator may subsequently
-        be passed "structured" data (dicts, lists, tuples) containing
-        translatable strings and translate to a particular language
+    In addition to native data types, attributes will also include
+    instances of ``TranslatableString``. A translator may subsequently
+    be passed "structured" data (dicts, lists, tuples) containing
+    translatable strings and translate to a particular language
     """
 
     def __init__(self, model, session, language, debug_output=False):
@@ -95,10 +96,11 @@ class Translator(object):
             return None
 
     def translate(self, translatable, cache=None):
-        """ Translate ``TranslatableString`` by looking up a translation
+        """
+        Translate ``TranslatableString`` by looking up a translation
 
-            can also take a 'structure' (currently lists, tuples, and dicts)
-            and recursively translate any TranslatableStrings found.
+        can also take a 'structure' (currently lists, tuples, and dicts)
+        and recursively translate any TranslatableStrings found.
         """
 
         if cache is None:
@@ -124,9 +126,9 @@ class Translator(object):
             return translatable
 
     def _prepare_cache(self, translatable):
-        """ Bulk load translations required to translate a translatable
-            'structure'
-
+        """
+        Bulk load translations required to translate a translatable
+        'structure'
         """
         translatables = self._collect_translatables(translatable)
         if not translatables:
@@ -141,9 +143,9 @@ class Translator(object):
         return cache
 
     def _collect_translatables(self, translatable, collection=None):
-        """ Run over a translatable 'structure' and collect any translatables
-
-            These are then bulk loaded from the db
+        """
+        Run over a translatable 'structure' and collect any translatables
+        These are then bulk loaded from the db
         """
 
         if collection is None:
