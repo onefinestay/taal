@@ -44,9 +44,12 @@ class TranslatableString(object):
             self.context, self.message_id, self.value)
 
     def __eq__(self, other):
-        self_dict = getattr(self, '__dict__', None)
-        other_dict = getattr(other, '__dict__', None)
-        return self_dict == other_dict
+        if not isinstance(other, TranslatableString):
+            return False
+
+        self_data = (self.context, self.message_id, self.value)
+        other_data = (other.context, other.message_id, other.value)
+        return self_data == other_data
 
 
 class Translator(object):
@@ -83,7 +86,7 @@ class Translator(object):
         else:
             raise BindError("Unknown target {}".format(target))
 
-    def _debug_message(self, translatable):
+    def _get_debug_translation(self, translatable):
         return "[Translation missing ({}, {}, {})]".format(
             self.language, translatable.context, translatable.message_id)
 
@@ -92,7 +95,7 @@ class Translator(object):
             return cache[(translatable.context, translatable.message_id)]
         except KeyError:
             if self.debug_output:
-                return self._debug_message(translatable)
+                return self._get_debug_translation(translatable)
             return None
 
     def translate(self, translatable, cache=None):

@@ -58,12 +58,12 @@ def session(request):
     session_cls = sessionmaker(bind=engine)
     drop_and_recreate_db()
     Base.metadata.create_all(engine)
-    session = session_cls()
+    db_session = session_cls()
 
     def teardown():
-        session.close()
+        db_session.close()
         # make session unuseable
-        session.__dict__ = {}
+        db_session.__dict__ = {}
 
     request.addfinalizer(teardown)
-    return session
+    return db_session

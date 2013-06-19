@@ -33,6 +33,24 @@ class CustomFieldsEntity(Entity):
     identifier = KaisoString()
 
 
+class Parent(Base):
+    __tablename__ = "test_parent"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString(20))
+    identifier = Column(String(20))
+
+
+class Child(Base):
+    __tablename__ = "test_child"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString(20))
+    identifier = Column(String(20))
+    parent_id = Column(Integer, ForeignKey('test_parent.id'))
+    parent = relationship('Parent', backref='children')
+
+
 def _create_translation(
         session, language, context, message_id, translation_str):
     translation = ConcreteTranslation(
@@ -58,21 +76,3 @@ def create_translation_for_entity(
     message_id = taal_kaiso_types.get_message_id(manager, obj)
     return _create_translation(
         session, language, context, message_id, translation_str)
-
-
-class Parent(Base):
-    __tablename__ = "test_parent"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
-
-
-class Child(Base):
-    __tablename__ = "test_child"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
-    parent_id = Column(Integer, ForeignKey('test_parent.id'))
-    parent = relationship('Parent', backref='children')
