@@ -49,20 +49,20 @@ def get_message_id(obj):
     return json.dumps(primary_keys)
 
 
-def make_from_obj(obj, column, value=None):
+def make_from_obj(obj, column, pending_value=None):
     context = get_context(obj, column)
     message_id = get_message_id(obj)
 
-    if value is None:
-        value = getattr(obj, column)
+    if pending_value is None:
+        pending_value = getattr(obj, column)
 
-    if isinstance(value, TaalTranslatableString):
-        value = value.value
+    if isinstance(pending_value, TaalTranslatableString):
+        pending_value = pending_value.pending_value
 
     return TaalTranslatableString(
         context=context,
         message_id=message_id,
-        value=value
+        pending_value=pending_value
     )
 
 
