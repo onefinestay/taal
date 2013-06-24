@@ -92,8 +92,7 @@ class TestMagic(object):
     def test_set_none(self):
         instance = CustomFields()
         instance.name = None
-        assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert instance.name is None
 
     def test_set_from_other(self):
         first = CustomFields(name='name')
@@ -110,8 +109,7 @@ class TestMagic(object):
 
     def test_init_from_none(self):
         instance = CustomFields()
-        assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert instance.name is None
 
     def test_change_from_init(self):
         instance = CustomFields(name='a')

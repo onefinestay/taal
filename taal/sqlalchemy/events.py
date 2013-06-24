@@ -4,7 +4,8 @@ from sqlalchemy import event, inspect
 
 from taal import TranslatableString as TaalTranslatableString
 from taal.sqlalchemy.types import (
-    TranslatableString, pending_translatables, make_from_obj)
+    TranslatableString, pending_translatables, make_from_obj, get_context,
+    get_message_id)
 
 
 translator_registry = WeakKeyDictionary()
@@ -21,8 +22,21 @@ def get_translator(owner):
 
 def set_(target, value, oldvalue, initiator):
     """ Wrap any value in ``TranslatableString`` (including None) """
+    if value is None:
+        return None
+
     if isinstance(value, TaalTranslatableString):
-        return value
+        # return value
+        if value.is_unset():
+            value = None
+        else:
+            context = get_context(target, initiator.key)
+            message_id = get_message_id(target)
+
+            if (context != value.context or message_id != value.message_id):
+                raise NotImplementedError(
+                    "Assignment of TranslatableStrings between different "
+                    "model fields is not supported yet")
 
     translatable = make_from_obj(target, initiator.key, value)
     return translatable
@@ -82,8 +96,9 @@ def before_flush(session, flush_context, instances):
             if isinstance(column.type, TranslatableString):
                 translator = get_translator(session)
                 value = getattr(target, column.name)
-                translator.save_translation(value, commit=True)
-                pending_translatables.add(value)
+                if value is not None:
+                    translator.save_translation(value, commit=True)
+                    pending_translatables.add(value)
 
     for target in session.new:
         mapper = inspect(target.__class__)
@@ -113,8 +128,9 @@ def after_commit(session):
         translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
-        old_value.context = translatable.context
-        old_value.message_id = translatable.message_id
+        if old_value is not None:
+            old_value.context = translatable.context
+            old_value.message_id = translatable.message_id
 
 
 def after_soft_rollback(session, previous_transaction):
