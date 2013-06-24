@@ -107,4 +107,4 @@ def test_make_from_obj(manager):
     obj = CustomFieldsEntity(id=1)
     translatable = make_from_obj(manager, obj, 'name', 'English name')
     assert translatable.message_id == '[["customfieldsentity", "id", 1]]'
-    assert translatable.value == 'English name'
+    assert translatable.pending_value == 'English name'
