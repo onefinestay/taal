@@ -23,7 +23,7 @@ class TranslatableString(types.TypeDecorator):
             # TODO: verify this
             raise RuntimeError("Cannot filter on translated fields")
 
-        if value.is_unset():
+        if value.is_unset() or value.pending_value is None:
             return None
 
         if value in pending_translatables:
