@@ -92,7 +92,7 @@ def before_flush(session, flush_context, instances):
                 value = getattr(target, column.name)
                 if value is not None:
                     pending_translatables.add(value)
-                    value = value.value
+                    value = value.pending_value
                 flush_log.setdefault(session, []).append(
                     (session.transaction, target, column, value))
 
@@ -113,8 +113,11 @@ def after_commit(session):
         translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
-        old_value.context = translatable.context
-        old_value.message_id = translatable.message_id
+        if old_value is not None:
+            # we may now have a primary key
+            old_value.message_id = translatable.message_id
+            # value is now saved. No need to keep around
+            old_value.pending_value = None
 
 
 def after_soft_rollback(session, previous_transaction):

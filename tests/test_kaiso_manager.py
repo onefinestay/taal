@@ -53,7 +53,7 @@ class TestKaiso(object):
         with get_translator(ConcreteTranslation, 'en') as translator:
             translatable = TranslatableString(
                 context=TypeTranslationContextManager.context,
-                message_id='Entity', value='English Entity')
+                message_id='Entity', pending_value='English Entity')
 
             translator.save_translation(translatable)
             translator.bind(manager)

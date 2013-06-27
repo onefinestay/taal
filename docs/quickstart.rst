@@ -51,7 +51,7 @@ Register your session to have translations automatically persisted::
     # table, along with some contextual information
     >>> translation = session.query(Translation).first()
     >>> translation.context, translation.message_id, translation.language,
-    ... translation.value
+    ... translation.pending_value
     ('taal:sa_field:my_model:name', '[1]', 'en', 'Spam')
 
     >>> instance.name
