@@ -109,7 +109,8 @@ class TestWriting(object):
             'context': 'context',
             'message_id': 'message_id',
         }
-        translatable = TranslatableString(value='translation', **params)
+        translatable = TranslatableString(
+            pending_value='translation', **params)
         translator.save_translation(translatable)
 
         read_translatable = TranslatableString(**params)
@@ -122,14 +123,15 @@ class TestWriting(object):
             'context': 'context',
             'message_id': 'message_id',
         }
-        translatable = TranslatableString(value='translation', **params)
+        translatable = TranslatableString(
+            pending_value='translation', **params)
         translator.save_translation(translatable)
 
         with get_session() as new_session:
             new_translator = Translator(
                 ConcreteTranslation, new_session, 'language')
             new_translatable = TranslatableString(
-                value='new translation', **params)
+                pending_value='new translation', **params)
             new_translator.save_translation(new_translatable)
 
         read_translatable = TranslatableString(**params)

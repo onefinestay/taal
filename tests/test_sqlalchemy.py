@@ -81,43 +81,43 @@ class TestMagic(object):
     def test_init(self):
         instance = CustomFields(name='name')
         assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert not isinstance(instance.name.pending_value, TranslatableString)
 
     def test_set(self):
         instance = CustomFields()
         instance.name = 'name'
         assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert not isinstance(instance.name.pending_value, TranslatableString)
 
     def test_set_none(self):
         instance = CustomFields()
         instance.name = None
         assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert not isinstance(instance.name.pending_value, TranslatableString)
 
     def test_set_from_other(self):
         first = CustomFields(name='name')
         second = CustomFields()
         second.name = first.name
         assert isinstance(second.name, TranslatableString)
-        assert not isinstance(second.name.value, TranslatableString)
+        assert not isinstance(second.name.pending_value, TranslatableString)
 
     def test_init_from_other(self):
         first = CustomFields(name='name')
         second = CustomFields(name=first.name)
         assert isinstance(second.name, TranslatableString)
-        assert not isinstance(second.name.value, TranslatableString)
+        assert not isinstance(second.name.pending_value, TranslatableString)
 
     def test_init_from_none(self):
         instance = CustomFields()
         assert isinstance(instance.name, TranslatableString)
-        assert not isinstance(instance.name.value, TranslatableString)
+        assert not isinstance(instance.name.pending_value, TranslatableString)
 
     def test_change_from_init(self):
         instance = CustomFields(name='a')
         instance.name = 'b'
         assert isinstance(instance.name, TranslatableString)
-        assert instance.name.value == 'b'
+        assert instance.name.pending_value == 'b'
 
     def test_refresh(self, session):
         instance = CustomFields()
@@ -126,7 +126,7 @@ class TestMagic(object):
 
         loaded = session.query(CustomFields).get(instance.id)
         assert isinstance(loaded.name, TranslatableString)
-        assert not isinstance(loaded.name.value, TranslatableString)
+        assert not isinstance(loaded.name.pending_value, TranslatableString)
 
     def test_refresh_with_value(self, session):
         instance = CustomFields(name='name')
@@ -185,7 +185,7 @@ class TestMagic(object):
         with get_session() as new_session:
             loaded = new_session.query(CustomFields).get(instance.id)
         assert isinstance(loaded.name, TranslatableString)
-        assert not isinstance(loaded.name.value, TranslatableString)
+        assert not isinstance(loaded.name.pending_value, TranslatableString)
 
     def test_save(self, session):
         with get_translator(ConcreteTranslation, 'en') as translator:

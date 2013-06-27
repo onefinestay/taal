@@ -24,31 +24,31 @@ class TranslatableString(object):
     Placeholder for a string to be translated
 
     Holds metadata, ``context`` and ``message_id``, and optionally
-    a string ``value``
+    a string ``pending_value``
 
-    A ``TranslatableString`` with no ``message_id`` or ``value`` is
+    A ``TranslatableString`` with no ``message_id`` or ``pending_value`` is
     considered empty (``is_unset``)
     """
 
-    def __init__(self, context=None, message_id=None, value=None):
+    def __init__(self, context=None, message_id=None, pending_value=None):
         self.context = context
         self.message_id = message_id
-        self.value = value
+        self.pending_value = pending_value
 
     def is_unset(self):
         """ The "empty" TranslatableString """
-        return (self.message_id is None and self.value is None)
+        return (self.message_id is None and self.pending_value is None)
 
     def __repr__(self):
         return "<TranslatableString: ({}, {}, {})>".format(
-            self.context, self.message_id, self.value)
+            self.context, self.message_id, self.pending_value)
 
     def __eq__(self, other):
         if not isinstance(other, TranslatableString):
             return False
 
-        self_data = (self.context, self.message_id, self.value)
-        other_data = (other.context, other.message_id, other.value)
+        self_data = (self.context, self.message_id, self.pending_value)
+        other_data = (other.context, other.message_id, other.pending_value)
         return self_data == other_data
 
 
@@ -183,7 +183,7 @@ class Translator(object):
         # we can use merge for 'on duplicate key update'
         # (only works in sqla if we're matching on the primary key)
         translation = self.session.merge(translation)
-        translation.value = translatable.value
+        translation.value = translatable.pending_value
 
         if commit:
             self.session.commit()
