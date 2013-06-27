@@ -51,6 +51,7 @@ class Child(Base):
     parent = relationship('Parent', backref='children')
 
 
+# Consider moving to the TranslationContextManager
 def _create_translation(
         session, language, context, message_id, translation_str):
     translation = ConcreteTranslation(

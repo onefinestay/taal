@@ -212,6 +212,9 @@ class TranslationContextManager(object):
     def list_message_ids(self):
         """ List of message ids for all objects managed by this manager """
 
+    # consider including _create_translation or something similar
+    # from tests/models.py
+
 
 class TranslationManager(object):
     """ Collection of ``TranslationContextManager``\s """
