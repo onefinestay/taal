@@ -7,6 +7,9 @@ from sqlalchemy.orm.mapper import Mapper
 from taal import TranslatableString as TaalTranslatableString
 
 
+CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"
+
+
 pending_translatables = WeakSet()  # to aid debugging
 
 
@@ -34,7 +37,7 @@ class TranslatableString(types.TypeDecorator):
 
 def get_context(obj, column):
     table = obj.__table__
-    return "taal:sa_field:{}:{}".format(table, column)
+    return CONTEXT_TEMPLATE.format(table, column)
 
 
 def get_message_id(obj):
