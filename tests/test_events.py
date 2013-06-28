@@ -1,24 +1,24 @@
-from tests.helpers import get_translator
+from taal import Translator
 from tests.models import ConcreteTranslation, Parent, Child, CustomFields
 
 
-def test_refresh_with_relationship(session):
+def test_refresh_with_relationship(session, session_cls):
     """ regression: refreshing attribute that isn't a column name """
 
-    with get_translator(ConcreteTranslation, 'en') as translator:
-        translator.bind(session)
-        parent = Parent()
-        child = Child(parent=parent)
-        session.add(child)
-        session.commit()
+    translator = Translator(ConcreteTranslation, session_cls(), 'en')
+    translator.bind(session)
+    parent = Parent()
+    child = Child(parent=parent)
+    session.add(child)
+    session.commit()
 
-        assert parent.children == [child]
+    assert parent.children == [child]
 
 
-def test_merge_from_other_session(session):
+def test_merge_from_other_session(session, session_cls):
     """ regression test """
 
-    with get_translator(ConcreteTranslation, 'en') as translator:
-        translator.bind(session)
-        instance = CustomFields()
-        session.merge(instance)
+    translator = Translator(ConcreteTranslation, session_cls(), 'en')
+    translator.bind(session)
+    instance = CustomFields()
+    session.merge(instance)

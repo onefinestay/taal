@@ -5,7 +5,6 @@ import pytest
 from taal import Translator, TranslatableString
 
 from tests.models import ConcreteTranslation
-from tests.helpers import get_session
 
 
 @pytest.mark.usefixtures('manager')
@@ -103,7 +102,7 @@ class TestModels(object):
 
 @pytest.mark.usefixtures('manager')
 class TestWriting(object):
-    def test_save_translation(self, session):
+    def test_save_translation(self, session, session_cls):
         translator = Translator(ConcreteTranslation, session, 'language')
         params = {
             'context': 'context',
@@ -117,7 +116,7 @@ class TestWriting(object):
         translation = translator.translate(read_translatable)
         assert translation == 'translation'
 
-    def test_update_translation(self, session):
+    def test_update_translation(self, session, session_cls):
         translator = Translator(ConcreteTranslation, session, 'language')
         params = {
             'context': 'context',
@@ -127,12 +126,11 @@ class TestWriting(object):
             pending_value='translation', **params)
         translator.save_translation(translatable)
 
-        with get_session() as new_session:
-            new_translator = Translator(
-                ConcreteTranslation, new_session, 'language')
-            new_translatable = TranslatableString(
-                pending_value='new translation', **params)
-            new_translator.save_translation(new_translatable)
+        new_translator = Translator(
+            ConcreteTranslation, session_cls(), 'language')
+        new_translatable = TranslatableString(
+            pending_value='new translation', **params)
+        new_translator.save_translation(new_translatable)
 
         read_translatable = TranslatableString(**params)
         translation = translator.translate(read_translatable)

@@ -10,7 +10,7 @@ from taal.sqlalchemy.types import get_context, get_message_id
 from tests.models import (
     CustomFields, ConcreteTranslation, create_translation_for_model)
 
-from tests.helpers import get_session, get_translator
+# from tests.helpers import get_session, get_translator
 
 
 fixture = pytest.mark.usesfixtures('session')
@@ -128,88 +128,85 @@ class TestMagic(object):
         assert isinstance(loaded.name, TranslatableString)
         assert not isinstance(loaded.name.pending_value, TranslatableString)
 
-    def test_refresh_with_value(self, session):
+    def test_refresh_with_value(self, session, session_cls):
         instance = CustomFields(name='name')
 
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            session.add(instance)
-            session.commit()
+        session.add(instance)
+        session.commit()
 
-            loaded = session.query(CustomFields).get(instance.id)
-            assert isinstance(loaded.name, TranslatableString)
-            translation = session.query(ConcreteTranslation).one()
-            assert translation.value == 'name'
+        loaded = session.query(CustomFields).get(instance.id)
+        assert isinstance(loaded.name, TranslatableString)
+        translation = session.query(ConcreteTranslation).one()
+        assert translation.value == 'name'
 
-    def test_query(self, session):
+    def test_query(self, session, session_cls):
         instance = CustomFields(name='name')
 
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            session.add(instance)
-            session.commit()
+        session.add(instance)
+        session.commit()
 
-            loaded = session.query(CustomFields).filter(
-                CustomFields.id == instance.id).one()
-            assert isinstance(loaded.name, TranslatableString)
-            session.close()
-            translation = session.query(ConcreteTranslation).one()
-            assert translation.value == 'name'
+        loaded = session.query(CustomFields).filter(
+            CustomFields.id == instance.id).one()
+        assert isinstance(loaded.name, TranslatableString)
+        session.close()
+        translation = session.query(ConcreteTranslation).one()
+        assert translation.value == 'name'
 
-    def test_modify(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_modify(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields(name='a')
-            session.add(instance)
-            session.commit()
+        instance = CustomFields(name='a')
+        session.add(instance)
+        session.commit()
 
-            with get_session() as translator_session:
-                assert translator_session.query(ConcreteTranslation).value(
-                    ConcreteTranslation.value) == 'a'
+        assert session_cls().query(ConcreteTranslation).value(
+            ConcreteTranslation.value) == 'a'
 
-            instance.name = 'b'
-            session.commit()
+        instance.name = 'b'
+        session.commit()
 
-            with get_session() as translator_session:
-                assert translator_session.query(ConcreteTranslation).value(
-                    ConcreteTranslation.value) == 'b'
+        assert session_cls().query(ConcreteTranslation).value(
+            ConcreteTranslation.value) == 'b'
 
-    def test_load(self, session):
+    def test_load(self, session, session_cls):
         instance = CustomFields()
         session.add(instance)
         session.commit()
 
-        with get_session() as new_session:
-            loaded = new_session.query(CustomFields).get(instance.id)
+        loaded = session_cls().query(CustomFields).get(instance.id)
         assert isinstance(loaded.name, TranslatableString)
         assert not isinstance(loaded.name.pending_value, TranslatableString)
 
-    def test_save(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_save(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields(name='name')
-            session.add(instance)
-            session.commit()
+        instance = CustomFields(name='name')
+        session.add(instance)
+        session.commit()
 
         assert session.query(ConcreteTranslation).value(
             ConcreteTranslation.value) == 'name'
 
-    def test_save_none(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_save_none(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields()
-            session.add(instance)
-            session.commit()
+        instance = CustomFields()
+        session.add(instance)
+        session.commit()
 
         assert session.query(ConcreteTranslation).value(
             ConcreteTranslation.value) is None
 
-    def test_change_language(self, session):
+    def test_change_language(self, session, session_cls):
         session.add(ConcreteTranslation(
             context=get_context(CustomFields(), 'name'),
             message_id="[1]",
@@ -223,62 +220,64 @@ class TestMagic(object):
             value="fr name"
         ))
 
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            with get_translator(ConcreteTranslation, 'fr') as translator_fr:
-                translator.bind(session)
+        session_en = session_cls()
+        translator_en = Translator(ConcreteTranslation, session_en, 'en')
+        session_fr = session_cls()
+        translator_fr = Translator(ConcreteTranslation, session_fr, 'fr')
+        translator_en.bind(session)
 
-                instance_en = CustomFields(name='new en name')
-                session.add(instance_en)
-                session.commit()
-                id_ = instance_en.id
+        instance_en = CustomFields(id=1, name='new en name')
+        session.add(instance_en)
+        session.commit()
+        id_ = instance_en.id
 
-                instance_fr = session.query(CustomFields).get(id_)
-                assert translator_fr.translate(instance_fr.name) == 'fr name'
+        instance_fr = session.query(CustomFields).get(id_)
+        assert translator_fr.translate(instance_fr.name) == 'fr name'
 
-                values = session.query(ConcreteTranslation).values(
-                    ConcreteTranslation.language, ConcreteTranslation.value)
-                assert set(values) == set([
-                    ('en', 'new en name'),
-                    ('fr', 'fr name'),
-                ])
+        values = session.query(ConcreteTranslation).values(
+            ConcreteTranslation.language, ConcreteTranslation.value)
+        assert set(values) == set([
+            ('en', 'new en name'),
+            ('fr', 'fr name'),
+        ])
 
-    def test_update(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_update(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields(name='name')
-            session.add(instance)
-            session.commit()
+        instance = CustomFields(name='name')
+        session.add(instance)
+        session.commit()
 
-            with pytest.raises(StatementError):
-                session.query(CustomFields).update({'name': 'updated_name'})
+        with pytest.raises(StatementError):
+            session.query(CustomFields).update({'name': 'updated_name'})
 
-    def test_flushing(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_flushing(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields(name='name')
-            session.add(instance)
+        instance = CustomFields(name='name')
+        session.add(instance)
 
-            assert instance.name is not None
-            session.flush()
-            assert instance.name is not None
+        assert instance.name is not None
+        session.flush()
+        assert instance.name is not None
 
-    def test_deleting(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_deleting(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance = CustomFields(name='name')
-            session.add(instance)
-            session.commit()
+        instance = CustomFields(name='name')
+        session.add(instance)
+        session.commit()
 
-            assert session.query(ConcreteTranslation).count() == 1
+        assert session.query(ConcreteTranslation).count() == 1
 
-            session.delete(instance)
-            assert session.query(ConcreteTranslation).count() == 1
+        session.delete(instance)
+        assert session.query(ConcreteTranslation).count() == 1
 
-            session.commit()
-            assert session.query(ConcreteTranslation).count() == 0
+        session.commit()
+        assert session.query(ConcreteTranslation).count() == 0
 
     def test_rollback(self):
         """ TODO """
@@ -288,46 +287,46 @@ class TestMagic(object):
 
 
 class TestSavepoints(object):
-    def test_verify(self, session):
+    def test_verify(self, session, session_cls):
         # check the test setup works
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            assert session not in flush_log
-            assert translator.session not in flush_log
+        assert session not in flush_log
+        assert translator.session not in flush_log
 
-            instance1 = CustomFields(name='instance 1')
-            session.add(instance1)
+        instance1 = CustomFields(name='instance 1')
+        session.add(instance1)
 
-            session.flush()
-            assert session in flush_log
-            assert len(flush_log[session]) == 1
-            session.commit()
-            assert session not in flush_log
+        session.flush()
+        assert session in flush_log
+        assert len(flush_log[session]) == 1
+        session.commit()
+        assert session not in flush_log
 
-            instance2 = CustomFields(name='instance 2')
-            session.add(instance2)
-            session.commit()
-            assert session not in flush_log
-            assert session.query(ConcreteTranslation).count() == 2
+        instance2 = CustomFields(name='instance 2')
+        session.add(instance2)
+        session.commit()
+        assert session not in flush_log
+        assert session.query(ConcreteTranslation).count() == 2
 
-    def test_savepoints(self, session):
-        with get_translator(ConcreteTranslation, 'en') as translator:
-            translator.bind(session)
+    def test_savepoints(self, session, session_cls):
+        translator = Translator(ConcreteTranslation, session_cls(), 'en')
+        translator.bind(session)
 
-            instance1 = CustomFields(name='instance 1')
-            session.add(instance1)
+        instance1 = CustomFields(name='instance 1')
+        session.add(instance1)
 
-            session.begin_nested()
+        session.begin_nested()
 
-            instance2 = CustomFields(name='instance 2')
-            session.add(instance2)
-            session.flush()
-            assert session in flush_log
-            assert len(flush_log[session]) == 2
+        instance2 = CustomFields(name='instance 2')
+        session.add(instance2)
+        session.flush()
+        assert session in flush_log
+        assert len(flush_log[session]) == 2
 
-            session.rollback()
-            session.commit()
+        session.rollback()
+        session.commit()
 
-            assert session.query(CustomFields).count() == 1
-            assert session.query(ConcreteTranslation).count() == 1
+        assert session.query(CustomFields).count() == 1
+        assert session.query(ConcreteTranslation).count() == 1
