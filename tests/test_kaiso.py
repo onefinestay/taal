@@ -12,7 +12,7 @@ from taal.kaiso.types import get_context, get_message_id, make_from_obj
 
 from tests.kaiso import Fish
 from tests.models import (
-    CustomFieldsEntity, ConcreteTranslation, create_translation_for_entity)
+    CustomFieldsEntity, Translation, create_translation_for_entity)
 
 
 manager_fixture = pytest.mark.usesfixtures('manager')
@@ -68,7 +68,7 @@ class TestFields(object):
 
         create_translation_for_entity(
             session, manager, 'english', item, 'name', 'English name')
-        translation = session.query(ConcreteTranslation).one()
+        translation = session.query(Translation).one()
         expected_context = "taal:kaiso_field:CustomFieldsEntity:name"
         expected_message_id = json.dumps([("customfieldsentity", "id", 0)])
 
@@ -97,7 +97,7 @@ class TestFields(object):
         translatable = TranslatableString(
             context=context, message_id=message_id)
 
-        translator = Translator(ConcreteTranslation, session, 'english')
+        translator = Translator(Translation, session, 'english')
         translated_data = translator.translate(translatable)
 
         assert translated_data == 'English name'

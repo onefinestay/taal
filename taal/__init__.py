@@ -188,11 +188,11 @@ class Translator(object):
         if commit:
             self.session.commit()
 
-    def delete_translation(self, translatable, commit=True):
+    def delete_translations(self, translatable, commit=True):
+        """ delete _all_ trnalsations for this (context, message_id) """
         self.session.query(self.model).filter_by(
             context=translatable.context,
             message_id=translatable.message_id,
-            language=self.language
         ).delete()
 
         if commit:

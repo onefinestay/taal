@@ -5,7 +5,7 @@ from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso.context_managers import TypeTranslationContextManager
 
 from tests.kaiso import Fish
-from tests.models import ConcreteTranslation, CustomFieldsEntity
+from tests.models import Translation, CustomFieldsEntity
 
 
 class TestKaiso(object):
@@ -17,7 +17,7 @@ class TestKaiso(object):
         manager = translating_manager
 
         self._setup(manager)
-        translator = Translator(ConcreteTranslation, session, 'en')
+        translator = Translator(Translation, session, 'en')
         translator.bind(manager)
 
         hierarchy = manager.get_labeled_type_hierarchy()
@@ -29,7 +29,7 @@ class TestKaiso(object):
         manager = translating_manager
 
         self._setup(manager)
-        translator = Translator(ConcreteTranslation, session, 'en')
+        translator = Translator(Translation, session, 'en')
         translator.bind(manager)
 
         hierarchy = manager.get_labeled_type_hierarchy()
@@ -49,7 +49,7 @@ class TestKaiso(object):
         manager = translating_manager
 
         self._setup(manager)
-        translator = Translator(ConcreteTranslation, session, 'en')
+        translator = Translator(Translation, session, 'en')
         translatable = TranslatableString(
             context=TypeTranslationContextManager.context,
             message_id='Entity', pending_value='English Entity')
@@ -67,7 +67,7 @@ class TestKaiso(object):
         manager = translating_manager
 
         self._setup(manager)
-        translator = Translator(ConcreteTranslation, session, 'en')
+        translator = Translator(Translation, session, 'en')
         translator.bind(manager)
 
         obj = CustomFieldsEntity(id=1, name='English name')

@@ -4,7 +4,7 @@ from sqlalchemy import event, inspect
 
 from taal import TranslatableString as TaalTranslatableString
 from taal.sqlalchemy.types import (
-    TranslatableString, pending_translatables, make_from_obj)
+    TranslatableString, pending_translatables, make_from_obj, NotNullValue)
 
 
 translator_registry = WeakKeyDictionary()
@@ -20,23 +20,16 @@ def get_translator(owner):
 
 
 def set_(target, value, oldvalue, initiator):
-    """ Wrap any value in ``TranslatableString`` (including None) """
+    """ Wrap any value in ``TranslatableString`` (except None) """
+    if value is None:
+        return None
+
     if isinstance(value, TaalTranslatableString):
-        return value
+        return TaalTranslatableString(
+            value.context, value.message_id, value.pending_value)
 
     translatable = make_from_obj(target, initiator.key, value)
     return translatable
-
-
-def init(target, args, kwargs):
-    """ If no value is passed to the constructor for a given translatable
-        column, ``set_`` isn't triggered. To make sure we wrap the None,
-        explicityly add it to the list of kwargs if missing """
-    mapper = inspect(target.__class__)
-    for column in mapper.columns:
-        if isinstance(column.type, TranslatableString):
-            if column.name not in kwargs:
-                kwargs[column.name] = None
 
 
 def load(target, context):
@@ -45,20 +38,46 @@ def load(target, context):
     for column in mapper.columns:
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
-            translatable = make_from_obj(target, column.name, value)
-            setattr(target, column.name, translatable)
+            if value is None:
+                continue
+            elif value is NotNullValue:
+                translatable = make_from_obj(target, column.name, value)
+                setattr(target, column.name, translatable)
+            else:
+                raise TypeError("Unexpected column value '{}'".format(
+                    value))
 
 
 def refresh(target, args, attrs):
     mapper = inspect(target.__class__)
+    if attrs is None:
+        attrs = mapper.columns.keys()
+
     for column_name in attrs:
         if column_name not in mapper.columns:
             continue
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
-            translatable = make_from_obj(target, column.name)
-            setattr(target, column.name, translatable)
+            value = getattr(target, column.name)
+            if value is not None:
+                translatable = make_from_obj(target, column.name, value)
+                setattr(target, column.name, translatable)
     return target
+
+
+def add_to_flush_log(session, target, delete=False):
+    mapper = inspect(target.__class__)
+    for column in mapper.columns:
+        if isinstance(column.type, TranslatableString):
+            if delete:
+                value = None  # will trigger deletion of translations
+            else:
+                value = getattr(target, column.name)
+            if value is not None:
+                pending_translatables.add(value)
+                value = value.pending_value
+            flush_log.setdefault(session, []).append(
+                (session.transaction, target, column, value))
 
 
 def before_flush(session, flush_context, instances):
@@ -75,42 +94,33 @@ def before_flush(session, flush_context, instances):
     """
 
     for target in session.dirty:
-        if not session.is_modified(target):
-            continue
-        mapper = inspect(target.__class__)
-        for column in mapper.columns:
-            if isinstance(column.type, TranslatableString):
-                translator = get_translator(session)
-                value = getattr(target, column.name)
-                translator.save_translation(value, commit=True)
-                pending_translatables.add(value)
+        if session.is_modified(target):
+            add_to_flush_log(session, target)
 
     for target in session.new:
-        mapper = inspect(target.__class__)
-        for column in mapper.columns:
-            if isinstance(column.type, TranslatableString):
-                value = getattr(target, column.name)
-                if value is not None:
-                    pending_translatables.add(value)
-                    value = value.pending_value
-                flush_log.setdefault(session, []).append(
-                    (session.transaction, target, column, value))
+        add_to_flush_log(session, target)
 
     for target in session.deleted:
-        mapper = inspect(target.__class__)
-        for column in mapper.columns:
-            if isinstance(column.type, TranslatableString):
-                translator = get_translator(session)
-                translator.delete_translation(
-                    getattr(target, column.name), commit=True)
+        add_to_flush_log(session, target, delete=True)
+
+
+def after_bulk_update(session, query, query_context, result):
+    # bulk updating to None would be ok, but leaves dangling Translations
+    raise NotImplementedError("Bulk updates are not yet supported")
 
 
 def after_commit(session):
     """ Save any pending translations for this session """
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
-        translatable = make_from_obj(target, column.name, value)
-        translator.save_translation(translatable, commit=True)
+        if value is None:
+            # pending_value is ignored as we are deleting
+            # just needs to be not-None
+            translatable = make_from_obj(target, column.name, '')
+            translator.delete_translations(translatable)
+        else:
+            translatable = make_from_obj(target, column.name, value)
+            translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
         if old_value is not None:
@@ -130,5 +140,6 @@ def after_soft_rollback(session, previous_transaction):
 
 def register_session(session):
     event.listen(session, 'before_flush', before_flush)
+    event.listen(session, 'after_bulk_update', after_bulk_update)
     event.listen(session, 'after_commit', after_commit)
     event.listen(session, 'after_soft_rollback', after_soft_rollback)

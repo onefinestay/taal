@@ -4,18 +4,18 @@ import pytest
 
 from taal import Translator, TranslatableString
 
-from tests.models import ConcreteTranslation
+from tests.models import Translation
 
 
 @pytest.mark.usefixtures('manager')
 class TestModels(object):
     def test_create(self, session):
-        translation = ConcreteTranslation(
+        translation = Translation(
             context='', message_id='', language='')
         session.add(translation)
         session.commit()
 
-        assert session.query(ConcreteTranslation).count() == 1
+        assert session.query(Translation).count() == 1
 
     def test_repr(self, session):
         translatable = TranslatableString(
@@ -25,13 +25,13 @@ class TestModels(object):
         assert "my message id" in repr(translatable)
 
     def test_translate(self, session):
-        translation = ConcreteTranslation(
+        translation = Translation(
             context='context', message_id='message_id',
             language='language', value='translation')
         session.add(translation)
         session.commit()
 
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -39,7 +39,7 @@ class TestModels(object):
         assert translation == 'translation'
 
     def test_translate_missing(self, session):
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -48,7 +48,7 @@ class TestModels(object):
 
     def test_translate_missing_debug(self, session):
         translator = Translator(
-            ConcreteTranslation, session, 'language', debug_output=True)
+            Translation, session, 'language', debug_output=True)
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -56,13 +56,13 @@ class TestModels(object):
         assert "[Translation missing" in translation
 
     def test_translate_structure(self, session):
-        translation = ConcreteTranslation(
+        translation = Translation(
             context='context', message_id='message_id',
             language='language', value='translation')
         session.add(translation)
         session.commit()
 
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -82,17 +82,17 @@ class TestModels(object):
         }
 
     def test_case_sensitivity(self, session):
-        translation_lower = ConcreteTranslation(
+        translation_lower = Translation(
             context='context', message_id='message_id',
             language='language', value='translation')
-        translation_upper = ConcreteTranslation(
+        translation_upper = Translation(
             context='CONTEXT', message_id='message_id',
             language='language', value='translation')
         session.add(translation_upper)
         session.add(translation_lower)
         session.commit()
 
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         translatable = TranslatableString(
             context='context', message_id='message_id')
 
@@ -103,7 +103,7 @@ class TestModels(object):
 @pytest.mark.usefixtures('manager')
 class TestWriting(object):
     def test_save_translation(self, session, session_cls):
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         params = {
             'context': 'context',
             'message_id': 'message_id',
@@ -117,7 +117,7 @@ class TestWriting(object):
         assert translation == 'translation'
 
     def test_update_translation(self, session, session_cls):
-        translator = Translator(ConcreteTranslation, session, 'language')
+        translator = Translator(Translation, session, 'language')
         params = {
             'context': 'context',
             'message_id': 'message_id',
@@ -127,7 +127,7 @@ class TestWriting(object):
         translator.save_translation(translatable)
 
         new_translator = Translator(
-            ConcreteTranslation, session_cls(), 'language')
+            Translation, session_cls(), 'language')
         new_translatable = TranslatableString(
             pending_value='new translation', **params)
         new_translator.save_translation(new_translatable)
@@ -135,4 +135,4 @@ class TestWriting(object):
         read_translatable = TranslatableString(**params)
         translation = translator.translate(read_translatable)
         assert translation == 'new translation'
-        assert session.query(ConcreteTranslation).count() == 1
+        assert session.query(Translation).count() == 1

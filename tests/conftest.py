@@ -82,3 +82,14 @@ def session_cls(request, clean_engine):
 @pytest.fixture
 def session(request, session_cls):
     return session_cls()
+
+
+@pytest.fixture
+def bound_session(request, session, session_cls):
+    # importing at the module level messes up coverage
+    from taal import Translator
+    from tests.models import Translation
+
+    translator = Translator(Translation, session_cls(), 'language')
+    translator.bind(session)
+    return session
