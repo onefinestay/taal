@@ -97,7 +97,7 @@ def test_modify_from_to(bound_session, first, second):
         assert instance.name.pending_value is None
 
 
-@pytest.mark.parametrize("value", [None, 'name',])
+@pytest.mark.parametrize("value", [None, 'name', ])
 def test_refresh(bound_session, session_cls, value):
     instance = Model(name=value)
     bound_session.add(instance)
@@ -111,7 +111,7 @@ def test_refresh(bound_session, session_cls, value):
         assert isinstance(instance.name, TranslatableString)
 
 
-@pytest.mark.parametrize("value", [None, 'name',])
+@pytest.mark.parametrize("value", [None, 'name', ])
 def test_load(session, session_cls, value):
     instance = Model(name=value)
     translator = Translator(Translation, session_cls(), 'language')
@@ -130,7 +130,7 @@ def test_load(session, session_cls, value):
         assert isinstance(instance.name, TranslatableString)
 
 
-@pytest.mark.parametrize("initial", [None, 'name',])
+@pytest.mark.parametrize("initial", [None, 'name', ])
 def test_bulk_update_to_value(bound_session, initial):
     instance = Model(name=initial)
     bound_session.add(instance)
@@ -150,7 +150,7 @@ def test_bulk_update_to_none(bound_session):
         bound_session.query(Model).update({'name': None})
 
 
-@pytest.mark.parametrize("initial", [None, 'name',])
+@pytest.mark.parametrize("initial", [None, 'name', ])
 def test_flushing(bound_session, session_cls, initial):
     instance = Model(name=initial)
     bound_session.add(instance)
@@ -428,8 +428,8 @@ def test_set_from_other_model(session, session_cls):
     session.add(model2)
     session.commit()
 
-    assert translator.session.query(Translation.context
-        ).distinct().count() == 2
+    assert translator.session.query(
+        Translation.context).distinct().count() == 2
 
 
 def test_corrupt_db(session, session_cls):

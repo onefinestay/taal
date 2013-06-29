@@ -67,8 +67,6 @@ class RequiredModel(Base):
     identifier = Column(Text)
 
 
-
-
 # Consider moving to the TranslationContextManager
 def _create_translation(
         session, language, context, message_id, translation_str):
