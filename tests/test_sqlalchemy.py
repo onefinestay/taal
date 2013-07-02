@@ -491,3 +491,12 @@ def test_required_field(bound_session):
     model = RequiredModel(name="bar")
     bound_session.add(model)
     bound_session.commit()
+
+
+# must have message_id to save
+
+def test_save_empty(session):
+    translatable = TranslatableString()
+    translator = Translator(Translation, session, 'language')
+    with pytest.raises(RuntimeError):
+        translator.save_translation(translatable)
