@@ -29,6 +29,7 @@ def pytest_collection_modifyitems(items):
 
 @pytest.fixture(scope="function")
 def manager(request):
+    # kaiso manager
     from kaiso.persistence import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
@@ -38,7 +39,13 @@ def manager(request):
 
 
 @pytest.fixture(scope="function")
-def translating_manager(request, manager):
+def translating_manager(request):
+    # taal manager
+    from taal.kaiso.manager import Manager
+
+    neo4j_uri = request.config.getoption('neo4j_uri')
+    Manager(neo4j_uri).destroy()
+    manager = Manager(neo4j_uri)
     return manager
 
 
