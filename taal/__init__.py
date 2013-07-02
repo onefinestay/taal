@@ -25,19 +25,12 @@ class TranslatableString(object):
 
     Holds metadata, ``context`` and ``message_id``, and optionally
     a string ``pending_value``
-
-    A ``TranslatableString`` with no ``message_id`` or ``pending_value`` is
-    considered empty (``is_unset``)
     """
 
     def __init__(self, context=None, message_id=None, pending_value=None):
         self.context = context
         self.message_id = message_id
         self.pending_value = pending_value
-
-    def is_unset(self):
-        """ The "empty" TranslatableString """
-        return (self.message_id is None and self.pending_value is None)
 
     def __repr__(self):
         return "<TranslatableString: ({}, {}, {})>".format(
