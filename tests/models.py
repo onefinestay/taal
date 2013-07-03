@@ -19,14 +19,6 @@ class Translation(TranslationMixin, Base):
     __tablename__ = "translations"
 
 
-class CustomFields(Base):
-    __tablename__ = "test_fields"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
-
-
 class CustomFieldsEntity(Entity):
     id = KaisoInteger(unique=True)
     name = taal_kaiso.TranslatableString()  # human readable

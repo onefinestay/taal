@@ -256,6 +256,7 @@ def test_merge_from_other_session(session_cls):
     session1.commit()
 
     session2.merge(instance)
+    session2.commit()
 
 
 def test_dirty_but_not_modified(bound_session):
@@ -471,9 +472,18 @@ def test_make_from_obj_error():
         make_from_obj(instance, 'name', instance.name)
 
 
-def test_load_error(bound_session):
+def test_load_translatable_string(bound_session):
+    # can happen in session.merge
     instance = Model(name='name')
     bound_session.add(instance)
+    attr_before = instance.name
+    load(instance, None)
+    assert instance.name == attr_before
+
+
+def test_load_error():
+    instance = Model()
+    instance.__dict__['name'] = 'foo'
     with pytest.raises(TypeError):
         load(instance, None)
 

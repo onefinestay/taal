@@ -43,6 +43,8 @@ def load(target, context):
             elif value is NotNullValue:
                 translatable = make_from_obj(target, column.name, value)
                 setattr(target, column.name, translatable)
+            elif isinstance(value, TaalTranslatableString):
+                continue  # during session.merge
             else:
                 raise TypeError("Unexpected column value '{}'".format(
                     value))
