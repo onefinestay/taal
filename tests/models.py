@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from kaiso.types import Entity
@@ -15,16 +15,8 @@ from taal.sqlalchemy import types as taal_sqlalchemy_types
 Base = declarative_base()
 
 
-class ConcreteTranslation(TranslationMixin, Base):
-    __tablename__ = "test_translations"
-
-
-class CustomFields(Base):
-    __tablename__ = "test_fields"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
+class Translation(TranslationMixin, Base):
+    __tablename__ = "translations"
 
 
 class CustomFieldsEntity(Entity):
@@ -51,10 +43,26 @@ class Child(Base):
     parent = relationship('Parent', backref='children')
 
 
+class Model(Base):
+    __tablename__ = "models"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString)
+    identifier = Column(Text)
+
+
+class RequiredModel(Base):
+    __tablename__ = "requiredmodels"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(taal_sqlalchemy.TranslatableString, nullable=False)
+    identifier = Column(Text)
+
+
 # Consider moving to the TranslationContextManager
 def _create_translation(
         session, language, context, message_id, translation_str):
-    translation = ConcreteTranslation(
+    translation = Translation(
         context=context,
         message_id=message_id,
         language=language,

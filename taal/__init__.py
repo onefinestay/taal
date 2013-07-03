@@ -25,19 +25,12 @@ class TranslatableString(object):
 
     Holds metadata, ``context`` and ``message_id``, and optionally
     a string ``pending_value``
-
-    A ``TranslatableString`` with no ``message_id`` or ``pending_value`` is
-    considered empty (``is_unset``)
     """
 
     def __init__(self, context=None, message_id=None, pending_value=None):
         self.context = context
         self.message_id = message_id
         self.pending_value = pending_value
-
-    def is_unset(self):
-        """ The "empty" TranslatableString """
-        return (self.message_id is None and self.pending_value is None)
 
     def __repr__(self):
         return "<TranslatableString: ({}, {}, {})>".format(
@@ -188,11 +181,11 @@ class Translator(object):
         if commit:
             self.session.commit()
 
-    def delete_translation(self, translatable, commit=True):
+    def delete_translations(self, translatable, commit=True):
+        """ delete _all_ translations for this (context, message_id) """
         self.session.query(self.model).filter_by(
             context=translatable.context,
             message_id=translatable.message_id,
-            language=self.language
         ).delete()
 
         if commit:

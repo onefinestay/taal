@@ -18,8 +18,18 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture
+def pytest_collection_modifyitems(items):
+    """ mark items by requirements for (de-)selecting """
+    for item in items:
+        if 'session_cls' in item.fixturenames:
+            item.keywords["sql"] = pytest.mark.sql
+        if 'manager' in item.fixturenames:
+            item.keywords["neo4j"] = pytest.mark.neo4j
+
+
+@pytest.fixture(scope="function")
 def manager(request):
+    # kaiso manager
     from kaiso.persistence import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
@@ -28,8 +38,9 @@ def manager(request):
     return manager
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def translating_manager(request):
+    # taal manager
     from taal.kaiso.manager import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
@@ -38,8 +49,8 @@ def translating_manager(request):
     return manager
 
 
-@pytest.fixture
-def session(request):
+@pytest.fixture(scope="session")
+def clean_engine(request):
     # importing at the module level messes up coverage
     from tests.models import Base
 
@@ -55,15 +66,37 @@ def session(request):
         engine.execute(query)
 
     engine = create_engine(connection_string)
-    session_cls = sessionmaker(bind=engine)
     drop_and_recreate_db()
     Base.metadata.create_all(engine)
-    db_session = session_cls()
+    return engine
 
-    def teardown():
-        db_session.close()
-        # make session unuseable
-        db_session.__dict__ = {}
 
-    request.addfinalizer(teardown)
-    return db_session
+@pytest.fixture(scope="function")
+def session_cls(request, clean_engine):
+    from tests.models import Base
+    engine = clean_engine
+    session_cls = sessionmaker(bind=engine)
+    connection = engine.connect()
+    transaction = connection.begin()
+    for table in reversed(Base.metadata.sorted_tables):
+        connection.execute(table.delete())
+    transaction.commit()
+
+    request.addfinalizer(session_cls.close_all)
+    return session_cls
+
+
+@pytest.fixture
+def session(request, session_cls):
+    return session_cls()
+
+
+@pytest.fixture
+def bound_session(request, session, session_cls):
+    # importing at the module level messes up coverage
+    from taal import Translator
+    from tests.models import Translation
+
+    translator = Translator(Translation, session_cls(), 'language')
+    translator.bind(session)
+    return session
