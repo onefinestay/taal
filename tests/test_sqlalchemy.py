@@ -140,16 +140,6 @@ def test_bulk_update_to_value(bound_session, initial):
         bound_session.query(Model).update({'name': 'name'})
 
 
-def test_bulk_update_to_none(bound_session):
-    # not yet supported
-    instance = Model(name='name')
-    bound_session.add(instance)
-    bound_session.commit()
-
-    with pytest.raises(RuntimeError):
-        bound_session.query(Model).update({'name': None})
-
-
 @pytest.mark.parametrize("initial", [None, 'name', ])
 def test_flushing(bound_session, session_cls, initial):
     instance = Model(name=initial)
