@@ -108,7 +108,10 @@ def before_flush(session, flush_context, instances):
 
 def after_bulk_update(session, query, query_context, result):
     # bulk updating to None would be ok, but leaves dangling Translations
-    raise NotImplementedError("Bulk updates are not yet supported")
+    for bind in result.context.compiled.binds.values():
+        field_type = bind.type
+        if isinstance(field_type, TranslatableString):
+            raise NotImplementedError("Bulk updates are not yet supported")
 
 
 def after_commit(session):
