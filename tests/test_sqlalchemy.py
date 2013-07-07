@@ -140,6 +140,26 @@ def test_bulk_update_to_value(bound_session, initial):
         bound_session.query(Model).update({'name': 'name'})
 
 
+def test_bulk_update_to_none(bound_session):
+    # not yet supported
+    instance = Model(name='name')
+    bound_session.add(instance)
+    bound_session.commit()
+
+    with pytest.raises(RuntimeError):
+        bound_session.query(Model).update({'name': None})
+
+
+def test_bulk_update_normal_field(bound_session):
+    # regression test: should be allowed
+    instance = Model(name='name')
+    bound_session.add(instance)
+    bound_session.commit()
+
+    bound_session.query(Model).update({'identifier': 'foo'})
+    bound_session.commit()
+
+
 @pytest.mark.parametrize("initial", [None, 'name', ])
 def test_flushing(bound_session, session_cls, initial):
     instance = Model(name=initial)
