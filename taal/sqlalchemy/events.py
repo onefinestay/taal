@@ -106,6 +106,11 @@ def before_flush(session, flush_context, instances):
         add_to_flush_log(session, target, delete=True)
 
 
+def after_bulk_update(session, query, query_context, result):
+    # bulk updating to None would be ok, but leaves dangling Translations
+    raise NotImplementedError("Bulk updates are not yet supported")
+
+
 def after_commit(session):
     """ Save any pending translations for this session """
     for transaction, target, column, value in flush_log.pop(session, []):
@@ -137,5 +142,6 @@ def after_soft_rollback(session, previous_transaction):
 
 def register_session(session):
     event.listen(session, 'before_flush', before_flush)
+    event.listen(session, 'after_bulk_update', after_bulk_update)
     event.listen(session, 'after_commit', after_commit)
     event.listen(session, 'after_soft_rollback', after_soft_rollback)
