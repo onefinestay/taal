@@ -50,7 +50,7 @@ def collect_translatables(manager, obj):
     """
 
     translations = []
-    descriptor = manager.type_registry.get_descriptor(obj.__class__)
+    descriptor = manager.type_registry.get_descriptor(type(obj))
     for attr_name, attr_type in descriptor.attributes.items():
         attr = getattr(obj, attr_name)
         if isinstance(attr_type, TranslatableString):
@@ -78,7 +78,7 @@ class Manager(KaisoManager):
     def serialize(self, obj):
         message_id = get_message_id(self, obj)
         data = super(Manager, self).serialize(obj)
-        descriptor = self.type_registry.get_descriptor(obj.__class__)
+        descriptor = self.type_registry.get_descriptor(type(obj))
         for attr_name, attr_type in descriptor.attributes.items():
             if isinstance(attr_type, TranslatableString):
                 context = get_context(self, obj, attr_name)
