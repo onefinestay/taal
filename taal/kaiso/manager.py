@@ -45,8 +45,8 @@ def collect_translatables(manager, obj):
 
         returns an iterable yielding the collecting translatables
 
-        expects translator.save or translator.delete to be called
-        for each collected translatable
+        expects translator.save_translation or translator.delete_translations
+        to be called for each collected translatable
     """
 
     translations = []
