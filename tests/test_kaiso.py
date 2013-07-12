@@ -12,7 +12,8 @@ from taal.kaiso.types import get_context, get_message_id, make_from_obj
 
 from tests.kaiso import Fish
 from tests.models import (
-    CustomFieldsEntity, Translation, create_translation_for_entity)
+    CustomFieldsEntity, NoCustomFieldsEntity, Translation,
+    create_translation_for_entity)
 
 
 manager_fixture = pytest.mark.usesfixtures('manager')
@@ -101,6 +102,22 @@ class TestFields(object):
         translated_data = translator.translate(translatable)
 
         assert translated_data == 'English name'
+
+    def test_delete(self, session_cls, bound_manager):
+        manager = bound_manager
+        item = CustomFieldsEntity(id=0, name="Name")
+        manager.save(item)
+
+        # make a fresh session each time
+        assert session_cls().query(Translation).count() == 1
+        manager.delete(item)
+        assert session_cls().query(Translation).count() == 0
+
+    def test_delete_no_translations(self, bound_manager):
+        manager = bound_manager
+        item = NoCustomFieldsEntity(id=0)
+        manager.save(item)
+        manager.delete(item)
 
 
 def test_make_from_obj(manager):
