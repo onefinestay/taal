@@ -50,7 +50,7 @@ class Manager(KaisoManager):
                     context, message_id)
         return data
 
-    def save(self, obj):
+    def save_or_delete(self, obj, super_method, action):
         translations = []  # queue up and do after save
         descriptor = self.type_registry.get_descriptor(obj.__class__)
         for attr_name, attr_type in descriptor.attributes.items():
@@ -61,10 +61,10 @@ class Manager(KaisoManager):
                 # what do we want in the db?
                 setattr(obj, attr_name, None)
 
-        saved = super(Manager, self).save(obj)
+        result = super_method(obj)
 
         if not translations:
-            return saved
+            return result
 
         translator = get_translator(self)
 
@@ -73,8 +73,19 @@ class Manager(KaisoManager):
             context = get_context(self, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)
-            translator.save_translation(translatable)
-        return saved
+            action_method = getattr(translator, action)
+            action_method(translatable)
+        return result
+
+    def save(self, obj):
+        super_method = super(Manager, self).save
+        action = 'save_translation'
+        return self.save_or_delete(obj, super_method, action)
+
+    def delete(self, obj):
+        super_method = super(Manager, self).delete
+        action = 'delete_translations'
+        return self.save_or_delete(obj, super_method, action)
 
     def get_labeled_type_hierarchy(self, start_type_id=None):
         type_hierarchy = super(

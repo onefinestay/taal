@@ -102,6 +102,16 @@ class TestFields(object):
 
         assert translated_data == 'English name'
 
+    def test_delete(self, session_cls, bound_manager):
+        manager = bound_manager
+        item = CustomFieldsEntity(id=0, name="Name")
+        manager.save(item)
+
+        # make a fresh session each time
+        assert session_cls().query(Translation).count() == 1
+        manager.delete(item)
+        assert session_cls().query(Translation).count() == 0
+
 
 def test_make_from_obj(manager):
     obj = CustomFieldsEntity(id=1)

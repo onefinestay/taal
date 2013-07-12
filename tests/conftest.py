@@ -49,6 +49,19 @@ def translating_manager(request):
     return manager
 
 
+@pytest.fixture(scope="function")
+def bound_manager(request, session_cls, translating_manager):
+    # importing at the module level messes up coverage
+    from taal import Translator
+    from tests.models import Translation
+
+    manager = translating_manager
+
+    translator = Translator(Translation, session_cls(), 'language')
+    translator.bind(manager)
+    return manager
+
+
 @pytest.fixture(scope="session")
 def clean_engine(request):
     # importing at the module level messes up coverage
