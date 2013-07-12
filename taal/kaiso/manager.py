@@ -43,7 +43,7 @@ def collect_translatables(manager, obj):
 
         may also mutate obj to replace translations with placeholders
 
-        returns an iterable yielding the collecting translatables
+        returns an iterable yielding the collecting translatables or None
 
         expects translator.save_translation or translator.delete_translations
         to be called for each collected translatable
@@ -61,7 +61,7 @@ def collect_translatables(manager, obj):
 
     if not translations:
         # so that we can check if this is empty before we start iterating
-        return []
+        return None
 
     def iter_translatables():
         message_id = get_message_id(manager, obj)
@@ -90,7 +90,7 @@ class Manager(KaisoManager):
         translatables = collect_translatables(self, obj)
         saved = super(Manager, self).save(obj)
 
-        if not translatables:
+        if translatables is None:
             return saved
 
         translator = get_translator(self)
@@ -104,7 +104,7 @@ class Manager(KaisoManager):
         translatables = collect_translatables(self, obj)
         result = super(Manager, self).delete(obj)
 
-        if not translatables:
+        if translatables is None:
             return result
 
         translator = get_translator(self)
