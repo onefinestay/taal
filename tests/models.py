@@ -25,6 +25,11 @@ class CustomFieldsEntity(Entity):
     identifier = KaisoString()
 
 
+class NoCustomFieldsEntity(Entity):
+    id = KaisoInteger(unique=True)
+    identifier = KaisoString()
+
+
 class Parent(Base):
     __tablename__ = "test_parent"
 

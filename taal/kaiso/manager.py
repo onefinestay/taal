@@ -38,6 +38,42 @@ def _label_attributes(type_id, attrs):
     return labelled_attrs
 
 
+def collect_translatables(manager, obj):
+    """ collect translatables from obj
+
+        may also mutate obj to replace translations with placeholders
+
+        returns an iterable yielding the collecting translatables
+
+        expects translator.save or translator.delete to be called
+        for each collected translatable
+    """
+
+    translations = []
+    descriptor = manager.type_registry.get_descriptor(obj.__class__)
+    for attr_name, attr_type in descriptor.attributes.items():
+        attr = getattr(obj, attr_name)
+        if isinstance(attr_type, TranslatableString):
+            translations.append((attr_name, attr))
+            # TODO: something better than this workaround
+            # what do we want in the db?
+            setattr(obj, attr_name, None)
+
+    if not translations:
+        # so that we can check if this is empty before we start iterating
+        return []
+
+    def iter_translatables():
+        message_id = get_message_id(manager, obj)
+        for attr_name, attr in translations:
+            context = get_context(manager, obj, attr_name)
+            translatable = TaalTranslatableString(
+                context, message_id, attr)
+            yield translatable
+
+    return iter_translatables()
+
+
 class Manager(KaisoManager):
     def serialize(self, obj):
         message_id = get_message_id(self, obj)
@@ -50,42 +86,33 @@ class Manager(KaisoManager):
                     context, message_id)
         return data
 
-    def save_or_delete(self, obj, super_method, action):
-        translations = []  # queue up and do after save
-        descriptor = self.type_registry.get_descriptor(obj.__class__)
-        for attr_name, attr_type in descriptor.attributes.items():
-            attr = getattr(obj, attr_name)
-            if isinstance(attr_type, TranslatableString):
-                translations.append((attr_name, attr))
-                # TODO: something better than this workaround
-                # what do we want in the db?
-                setattr(obj, attr_name, None)
+    def save(self, obj):
+        translatables = collect_translatables(self, obj)
+        saved = super(Manager, self).save(obj)
 
-        result = super_method(obj)
+        if not translatables:
+            return saved
 
-        if not translations:
+        translator = get_translator(self)
+
+        for translatable in translatables:
+            translator.save_translation(translatable)
+
+        return saved
+
+    def delete(self, obj):
+        translatables = collect_translatables(self, obj)
+        result = super(Manager, self).delete(obj)
+
+        if not translatables:
             return result
 
         translator = get_translator(self)
 
-        message_id = get_message_id(self, obj)
-        for attr_name, attr in translations:
-            context = get_context(self, obj, attr_name)
-            translatable = TaalTranslatableString(
-                context, message_id, attr)
-            action_method = getattr(translator, action)
-            action_method(translatable)
+        for translatable in translatables:
+            translator.delete_translations(translatable)
+
         return result
-
-    def save(self, obj):
-        super_method = super(Manager, self).save
-        action = 'save_translation'
-        return self.save_or_delete(obj, super_method, action)
-
-    def delete(self, obj):
-        super_method = super(Manager, self).delete
-        action = 'delete_translations'
-        return self.save_or_delete(obj, super_method, action)
 
     def get_labeled_type_hierarchy(self, start_type_id=None):
         type_hierarchy = super(
