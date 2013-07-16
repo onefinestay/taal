@@ -167,6 +167,11 @@ class Translator(object):
                 "Cannot save translatable '{}'. "
                 "Message id is None".format(translatable))
 
+        if self.debug_output:
+            debug_value = self._get_debug_translation(translatable)
+            if translatable.pending_value == debug_value:
+                return
+
         translation = self.model(
             context=translatable.context,
             message_id=translatable.message_id,
