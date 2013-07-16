@@ -55,6 +55,19 @@ class TestModels(object):
         translation = translator.translate(translatable)
         assert "[Translation missing" in translation
 
+    def test_dont_save_debug_translation(self, session):
+        translator = Translator(
+            Translation, session, 'language', debug_output=True)
+
+        translatable = TranslatableString(
+            context='context', message_id='message_id')
+        debug_value = translator._get_debug_translation(translatable)
+        translatable.pending_value = debug_value
+
+        translator.save_translation(translatable)
+
+        assert session.query(Translation).count() == 0
+
     def test_translate_structure(self, session):
         translation = Translation(
             context='context', message_id='message_id',
