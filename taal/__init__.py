@@ -7,8 +7,8 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import tuple_
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.expression import tuple_, and_, or_
 
 from taal.exceptions import BindError
 
@@ -17,6 +17,9 @@ try:
     VERSION = __import__('pkg_resources').get_distribution('taal').version
 except:  # pragma: no cover
     VERSION = 'unknown'
+
+
+NULL = None  # for pep8
 
 
 class TranslatableString(object):
@@ -195,6 +198,42 @@ class Translator(object):
 
         if commit:
             self.session.commit()
+
+    def _normalised_translations(self, languages):
+        session = self.session
+        model = self.model
+
+        base_query = session.query(model.context, model.message_id).distinct()
+
+        subquery = base_query.subquery(name='basequery')
+        query = session.query(subquery)
+
+        aliases = []
+        for language in languages:
+            alias = aliased(model, name=language)
+            query = query.outerjoin(
+                alias,
+                and_(
+                    alias.context == subquery.c.context,
+                    alias.message_id == subquery.c.message_id,
+                    alias.language == language
+                )
+            )
+            aliases.append(alias)
+
+        columns = [subquery.c.context, subquery.c.message_id] + [
+            alias.value for alias in aliases]
+
+        return query, aliases, columns
+
+    def list_translations(self, languages):
+        query, _, columns = self._normalised_translations(languages)
+        return query.values(*columns)
+
+    def list_missing_translations(self, languages):
+        query, aliases, columns = self._normalised_translations(languages)
+        query = query.filter(or_(*(alias.value == NULL for alias in aliases)))
+        return query.values(*columns)
 
 
 class TranslationContextManager(object):

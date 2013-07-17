@@ -520,3 +520,70 @@ def test_save_empty(session):
     translator = Translator(Translation, session, 'language')
     with pytest.raises(RuntimeError):
         translator.save_translation(translatable)
+
+
+class TestListTranslations(object):
+    # setup_method can't take fixtures
+    def setup_(self, session):
+
+        translation1 = Translation(
+            context='context', message_id='12', language='language1',
+            value='12-1')
+        translation2 = Translation(
+            context='context', message_id='12', language='language2',
+            value='12-2')
+        translation3 = Translation(
+            context='context', message_id='1', language='language1', value='1')
+        translation4 = Translation(
+            context='context', message_id='2', language='language2', value='2')
+
+        session.add(translation1)
+        session.add(translation2)
+        session.add(translation3)
+        session.add(translation4)
+
+        session.commit()
+
+    def test_list_translations(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, 'language')
+        translations = translator.list_translations(['language1', 'language2'])
+
+        assert set(translations) == set([
+            ('context', '12', '12-1', '12-2'),
+            ('context', '1', '1', None),
+            ('context', '2', None, '2'),
+        ])
+
+    def test_list_missing_translations(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, 'language')
+        missing_translations = translator.list_missing_translations(
+            ['language1', 'language2'])
+
+        assert set(missing_translations) == set([
+            ('context', '1', '1', None),
+            ('context', '2', None, '2'),
+        ])
+
+    def test_list_none(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, 'language')
+        translations = translator.list_translations([])
+
+        assert set(translations) == set([
+            ('context', '1'),
+            ('context', '2'),
+            ('context', '12'),
+        ])
+
+    def test_list_single(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, 'language')
+        translations = translator.list_translations(['language1'])
+
+        assert set(translations) == set([
+            ('context', '1', '1'),
+            ('context', '2', None),
+            ('context', '12', '12-1'),
+        ])
