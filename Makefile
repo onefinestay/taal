@@ -1,3 +1,9 @@
+ifdef TRAVIS
+	MYSQL := --db_uri=mysql://travis@127.0.0.1/test_db
+	NEO4J := --neo4j_uri=http://localhost:7474/db/data/
+endif
+
+
 noop:
 	@true
 
@@ -8,10 +14,10 @@ develop:
 	pip install -r test_requirements.txt
 
 pytest:
-	py.test --cov taal tests
+	py.test --cov taal tests ${MYSQL} ${NEO4J}
 
 flake8:
-	flake8
+	flake8 taal tests
 
 test: pytest flake8
 

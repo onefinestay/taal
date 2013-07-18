@@ -134,7 +134,7 @@ class Translator(object):
         pk_filter = tuple_(self.model.context, self.model.message_id).in_(pks)
         translations = self.session.query(self.model).filter(
             self.model.language == self.language).filter(pk_filter).values(
-                self.model.context, self.model.message_id, self.model.value)
+            self.model.context, self.model.message_id, self.model.value)
         cache = {(t[0], t[1]): t[2] for t in translations}
         return cache
 
@@ -225,7 +225,7 @@ class TranslationManager(object):
         if context in self._registry:
             raise KeyError(
                 "ContextManager with context '{}' already registered".format(
-                context)
+                    context)
             )
         self._registry[context] = context_manager
 

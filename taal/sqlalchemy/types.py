@@ -53,7 +53,7 @@ class TranslatableString(types.TypeDecorator):
 
         raise RuntimeError(
             "Unexpected value found in placeholer column: '{}'".format(
-            value))
+                value))
 
 
 def get_context(obj, column):
