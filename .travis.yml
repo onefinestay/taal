@@ -16,7 +16,7 @@ before_script:
   - mysql -e 'create database test_db;'
 
 script:
-  make test
+  - make test
 
 notifications:
   email: false
