@@ -12,6 +12,9 @@ install:
   - python setup.py -q install
   - pip install -r test_requirements.txt
 
+before_script:
+  - mysql -e 'create database test_db;'
+
 script:
   - make test
 
