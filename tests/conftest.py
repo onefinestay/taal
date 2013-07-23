@@ -9,8 +9,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--neo4j_uri", action="store",
         default="temp://",
-        help=("URI for establishing a connection to neo4j."
-        "See the docs for valid URIs"))
+        help=(
+            "URI for establishing a connection to neo4j. See the docs for"
+            " valid URIs"))
 
     parser.addoption(
         "--db_uri", action="store",
