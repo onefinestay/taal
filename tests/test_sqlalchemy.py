@@ -1,4 +1,7 @@
+# coding: utf-8
+
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import pytest
 from sqlalchemy import Column, Text, Integer
@@ -526,16 +529,20 @@ class TestListTranslations(object):
     # setup_method can't take fixtures
     def setup_(self, session):
 
+        # 3 objects, a moose (älg), a monkey and a hippo (flodhäst)
+        # we have both english and swedish translations for the moose,
+        # only english for the monkey and only swedish for the hippo
+
         translation1 = Translation(
-            context='context', message_id='12', language='language1',
-            value='12-1')
+            context='animal', message_id='1', language='en',
+            value='Moose')
         translation2 = Translation(
-            context='context', message_id='12', language='language2',
-            value='12-2')
+            context='animal', message_id='1', language='sv',
+            value='Älg')
         translation3 = Translation(
-            context='context', message_id='1', language='language1', value='1')
+            context='animal', message_id='2', language='en', value='Monkey')
         translation4 = Translation(
-            context='context', message_id='2', language='language2', value='2')
+            context='animal', message_id='3', language='sv', value='Flodhäst')
 
         session.add(translation1)
         session.add(translation2)
@@ -546,44 +553,44 @@ class TestListTranslations(object):
 
     def test_list_translations(self, session):
         self.setup_(session)
-        translator = Translator(Translation, session, 'language')
-        translations = translator.list_translations(['language1', 'language2'])
+        translator = Translator(Translation, session, '')
+        translations = translator.list_translations(['en', 'sv'])
 
         assert set(translations) == set([
-            ('context', '12', '12-1', '12-2'),
-            ('context', '1', '1', None),
-            ('context', '2', None, '2'),
+            ('animal', '1', 'Moose', 'Älg'),
+            ('animal', '2', 'Monkey', None),
+            ('animal', '3', None, 'Flodhäst'),
         ])
 
     def test_list_missing_translations(self, session):
         self.setup_(session)
-        translator = Translator(Translation, session, 'language')
+        translator = Translator(Translation, session, '')
         missing_translations = translator.list_missing_translations(
-            ['language1', 'language2'])
+            ['en', 'sv'])
 
         assert set(missing_translations) == set([
-            ('context', '1', '1', None),
-            ('context', '2', None, '2'),
+            ('animal', '2', 'Monkey', None),
+            ('animal', '3', None, 'Flodhäst'),
         ])
 
     def test_list_none(self, session):
         self.setup_(session)
-        translator = Translator(Translation, session, 'language')
+        translator = Translator(Translation, session, '')
         translations = translator.list_translations([])
 
         assert set(translations) == set([
-            ('context', '1'),
-            ('context', '2'),
-            ('context', '12'),
+            ('animal', '1'),
+            ('animal', '2'),
+            ('animal', '3'),
         ])
 
     def test_list_single(self, session):
         self.setup_(session)
-        translator = Translator(Translation, session, 'language')
-        translations = translator.list_translations(['language1'])
+        translator = Translator(Translation, session, '')
+        translations = translator.list_translations(['en'])
 
         assert set(translations) == set([
-            ('context', '1', '1'),
-            ('context', '2', None),
-            ('context', '12', '12-1'),
+            ('animal', '1', 'Moose'),
+            ('animal', '2', 'Monkey'),
+            ('animal', '3', None),
         ])
