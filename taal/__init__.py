@@ -200,6 +200,28 @@ class Translator(object):
             self.session.commit()
 
     def _normalised_translations(self, languages):
+        """ helper for bulk operations
+
+        returns query, aliases, columns, where
+
+        ``query`` is a sqlalchemy query that will select all contexts
+        and message_ids from the translations table and join it to itself
+        once for each language supplied in the languages list, returning
+        rows of the form (
+            context,
+            message_id,
+            translation in language 1,
+            translation in language 2,
+            ...
+        )
+
+        ``columns`` is a list of all columns in this tuple
+
+        ``aliases`` are sqlalchemy aliases to the (self) joined language tables
+        so that we can apply filters, e.g.
+            query.filter(aliases[0].value == NULL)
+
+        """
         session = self.session
         model = self.model
 
@@ -227,10 +249,20 @@ class Translator(object):
         return query, aliases, columns
 
     def list_translations(self, languages):
+        """ list all translations for the requested languages
+
+        return a tuple (context, message_id, value1, value2, ...)
+
+        where value_n is the translation for the nth language in the
+        ``languages`` list
+        """
         query, _, columns = self._normalised_translations(languages)
         return query.values(*columns)
 
     def list_missing_translations(self, languages):
+        """ as ``list_translations`` but restricted to rows where a translation
+        is missing for at least one of the requested languages
+        """
         query, aliases, columns = self._normalised_translations(languages)
         query = query.filter(or_(*(alias.value == NULL for alias in aliases)))
         return query.values(*columns)
