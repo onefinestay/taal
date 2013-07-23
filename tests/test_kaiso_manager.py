@@ -13,8 +13,8 @@ class TestKaiso(object):
     def _setup(self, manager):
         manager.save(Fish)
 
-    def test_labeled_hierarchy(self, session, translating_manager):
-        manager = translating_manager
+    def test_labeled_hierarchy(self, session, bound_manager):
+        manager = bound_manager
 
         self._setup(manager)
         translator = Translator(Translation, session, 'en')
@@ -25,8 +25,8 @@ class TestKaiso(object):
 
         assert isinstance(entity[1], TranslatableString)
 
-    def test_labeled_hierarchy_attributes(self, session, translating_manager):
-        manager = translating_manager
+    def test_labeled_hierarchy_attributes(self, session, bound_manager):
+        manager = bound_manager
 
         self._setup(manager)
         translator = Translator(Translation, session, 'en')
@@ -45,8 +45,8 @@ class TestKaiso(object):
         name_attr = attrs['name']
         assert isinstance(name_attr.label, TranslatableString)
 
-    def test_translating_class_labels(self, session, translating_manager):
-        manager = translating_manager
+    def test_translating_class_labels(self, session, bound_manager):
+        manager = bound_manager
 
         self._setup(manager)
         translator = Translator(Translation, session, 'en')
@@ -63,8 +63,8 @@ class TestKaiso(object):
         translated = translator.translate(entity[1])
         assert translated == 'English Entity'
 
-    def test_serialize(self, session, translating_manager):
-        manager = translating_manager
+    def test_serialize(self, session, bound_manager):
+        manager = bound_manager
 
         self._setup(manager)
         translator = Translator(Translation, session, 'en')

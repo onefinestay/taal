@@ -1,6 +1,7 @@
 from weakref import WeakKeyDictionary
 
-from kaiso.persistence import Manager as KaisoManager
+from kaiso.persistence import Manager as KaisoManager, TypeSystem
+from kaiso.types import get_type_id, PersistableType
 
 from taal import TranslatableString as TaalTranslatableString
 from taal.exceptions import NoTranslatorRegistered
@@ -38,6 +39,25 @@ def _label_attributes(type_id, attrs):
     return labelled_attrs
 
 
+def _save_type_id(translator, cls):
+    # until we can manage this better, save a placeholder translation
+    # with blank language (and value) so the type shows up as in the list
+    # of missing translations for all other languages
+
+    # temporarily change the language of the translator
+    # TODO: better handling of tasks like this
+    original_language = translator.language
+    translator.language = ''
+    type_id = get_type_id(cls)
+    translatable = TaalTranslatableString(
+        context=TypeTranslationContextManager.context,
+        message_id=type_id,
+        pending_value='',
+    )
+    translator.save_translation(translatable)
+    translator.language = original_language
+
+
 def collect_translatables(manager, obj):
     """ collect translatables from obj
 
@@ -58,10 +78,6 @@ def collect_translatables(manager, obj):
             # TODO: something better than this workaround
             # what do we want in the db?
             setattr(obj, attr_name, None)
-
-    if not translations:
-        # so that we can check if this is empty before we start iterating
-        return None
 
     def iter_translatables():
         message_id = get_message_id(manager, obj)
@@ -90,10 +106,13 @@ class Manager(KaisoManager):
         translatables = collect_translatables(self, obj)
         saved = super(Manager, self).save(obj)
 
-        if translatables is None:
+        if isinstance(obj, TypeSystem):
             return saved
 
         translator = get_translator(self)
+
+        if isinstance(obj, PersistableType):
+            _save_type_id(translator, obj)
 
         for translatable in translatables:
             translator.save_translation(translatable)
@@ -103,9 +122,6 @@ class Manager(KaisoManager):
     def delete(self, obj):
         translatables = collect_translatables(self, obj)
         result = super(Manager, self).delete(obj)
-
-        if translatables is None:
-            return result
 
         translator = get_translator(self)
 
