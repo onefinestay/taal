@@ -7,8 +7,8 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import tuple_
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.expression import tuple_, and_, or_
 
 from taal.exceptions import BindError
 
@@ -17,6 +17,9 @@ try:
     VERSION = __import__('pkg_resources').get_distribution('taal').version
 except:  # pragma: no cover
     VERSION = 'unknown'
+
+
+NULL = None  # for pep8
 
 
 class TranslatableString(object):
@@ -195,6 +198,74 @@ class Translator(object):
 
         if commit:
             self.session.commit()
+
+    def _normalised_translations(self, languages):
+        """ helper for bulk operations
+
+        returns query, aliases, columns, where
+
+        ``query`` is a sqlalchemy query that will select all contexts
+        and message_ids from the translations table and join it to itself
+        once for each language supplied in the languages list, returning
+        rows of the form (
+            context,
+            message_id,
+            translation in language 1,
+            translation in language 2,
+            ...
+        )
+
+        ``columns`` is a list of all columns in this tuple
+
+        ``aliases`` are sqlalchemy aliases to the (self) joined language tables
+        so that we can apply filters, e.g.
+            query.filter(aliases[0].value == NULL)
+
+        """
+        session = self.session
+        model = self.model
+
+        base_query = session.query(model.context, model.message_id).distinct()
+
+        subquery = base_query.subquery(name='basequery')
+        query = session.query(subquery)
+
+        aliases = []
+        for language in languages:
+            alias = aliased(model, name=language)
+            query = query.outerjoin(
+                alias,
+                and_(
+                    alias.context == subquery.c.context,
+                    alias.message_id == subquery.c.message_id,
+                    alias.language == language
+                )
+            )
+            aliases.append(alias)
+
+        columns = [subquery.c.context, subquery.c.message_id] + [
+            alias.value for alias in aliases]
+
+        return query, aliases, columns
+
+    def list_translations(self, languages):
+        """ list all translations for the requested languages
+
+        return a tuple (context, message_id, value1, value2, ...)
+
+        where value_n is the translation for the nth language in the
+        ``languages`` list
+        """
+        query, _, columns = self._normalised_translations(languages)
+        return query.values(*columns)
+
+    def list_missing_translations(self, languages):
+        """ as ``list_translations`` but restricted to rows where a translation
+        is missing for at least one of the requested languages
+        """
+        query, aliases, columns = self._normalised_translations(languages)
+        query = query.filter(or_(*(alias.value == NULL for alias in aliases)))
+        return query.values(*columns)
 
 
 class TranslationContextManager(object):

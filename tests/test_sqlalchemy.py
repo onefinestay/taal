@@ -1,4 +1,7 @@
+# coding: utf-8
+
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import pytest
 from sqlalchemy import Column, Text, Integer
@@ -520,3 +523,74 @@ def test_save_empty(session):
     translator = Translator(Translation, session, 'language')
     with pytest.raises(RuntimeError):
         translator.save_translation(translatable)
+
+
+class TestListTranslations(object):
+    # setup_method can't take fixtures
+    def setup_(self, session):
+
+        # 3 objects, a moose (älg), a monkey and a hippo (flodhäst)
+        # we have both english and swedish translations for the moose,
+        # only english for the monkey and only swedish for the hippo
+
+        translation1 = Translation(
+            context='animal', message_id='1', language='en',
+            value='Moose')
+        translation2 = Translation(
+            context='animal', message_id='1', language='sv',
+            value='Älg')
+        translation3 = Translation(
+            context='animal', message_id='2', language='en', value='Monkey')
+        translation4 = Translation(
+            context='animal', message_id='3', language='sv', value='Flodhäst')
+
+        session.add(translation1)
+        session.add(translation2)
+        session.add(translation3)
+        session.add(translation4)
+
+        session.commit()
+
+    def test_list_translations(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, '')
+        translations = translator.list_translations(['en', 'sv'])
+
+        assert set(translations) == set([
+            ('animal', '1', 'Moose', 'Älg'),
+            ('animal', '2', 'Monkey', None),
+            ('animal', '3', None, 'Flodhäst'),
+        ])
+
+    def test_list_missing_translations(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, '')
+        missing_translations = translator.list_missing_translations(
+            ['en', 'sv'])
+
+        assert set(missing_translations) == set([
+            ('animal', '2', 'Monkey', None),
+            ('animal', '3', None, 'Flodhäst'),
+        ])
+
+    def test_list_none(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, '')
+        translations = translator.list_translations([])
+
+        assert set(translations) == set([
+            ('animal', '1'),
+            ('animal', '2'),
+            ('animal', '3'),
+        ])
+
+    def test_list_single(self, session):
+        self.setup_(session)
+        translator = Translator(Translation, session, '')
+        translations = translator.list_translations(['en'])
+
+        assert set(translations) == set([
+            ('animal', '1', 'Moose'),
+            ('animal', '2', 'Monkey'),
+            ('animal', '3', None),
+        ])
