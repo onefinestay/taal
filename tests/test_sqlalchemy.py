@@ -299,6 +299,8 @@ def test_removing_translations(session, session_cls, first, second):
 
     if first is None:
         assert translator.session.query(Translation).count() == 0
+    elif first == "":
+        assert translator.session.query(Translation).count() == 0
     else:
         assert translator.session.query(Translation).count() == 1
 
@@ -306,6 +308,8 @@ def test_removing_translations(session, session_cls, first, second):
     session.commit()
 
     if second is None:
+        assert translator.session.query(Translation).count() == 0
+    elif second == "":
         assert translator.session.query(Translation).count() == 0
     else:
         assert translator.session.query(Translation).count() == 1
