@@ -51,6 +51,15 @@ def translating_manager(request):
 
 
 @pytest.fixture(scope="function")
+def type_heirarchy(manager):
+    """ Loads the type heirarchy defined in ``tests.kaiso`` using a normal
+    kaiso manager
+    """
+    from tests.kaiso import Fish
+    manager.save(Fish)
+
+
+@pytest.fixture(scope="function")
 def bound_manager(request, session_cls, translating_manager):
     # importing at the module level messes up coverage
     from taal import Translator
@@ -61,6 +70,17 @@ def bound_manager(request, session_cls, translating_manager):
     translator = Translator(Translation, session_cls(), 'language')
     translator.bind(manager)
     return manager
+
+
+@pytest.fixture(scope="function")
+def translating_type_heirarchy(bound_manager):
+    """ Loads the type heirarchy defined in ``tests.kaiso`` using a
+    bound, translating manager
+    """
+    from tests.kaiso import Fish
+
+    manager = bound_manager
+    manager.save(Fish)
 
 
 @pytest.fixture(scope="session")
