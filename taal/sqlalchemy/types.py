@@ -25,6 +25,8 @@ class TranslatableString(types.TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
+        elif value == "":
+            return ""
 
         if not isinstance(value, TaalTranslatableString):
             # this should only happen if someone is trying to query
@@ -44,6 +46,8 @@ class TranslatableString(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is None:
             return None
+        elif value == "":
+            return ""
         elif value == NOT_NULL:
             # can't prevent this from being returned to the user
             # in the case of a direct query for Model.field

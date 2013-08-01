@@ -20,9 +20,14 @@ def get_translator(owner):
 
 
 def set_(target, value, oldvalue, initiator):
-    """ Wrap any value in ``TranslatableString`` (except None) """
+    """ Wrap any value in ``TranslatableString``, except None and the empty
+    string
+    """
     if value is None:
         return None
+
+    if value == "":
+        return value
 
     if isinstance(value, TaalTranslatableString):
         return TaalTranslatableString(
@@ -39,6 +44,8 @@ def load(target, context):
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
             if value is None:
+                continue
+            elif value == "":
                 continue
             elif value is NotNullValue:
                 translatable = make_from_obj(target, column.name, value)
@@ -61,7 +68,11 @@ def refresh(target, args, attrs):
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
-            if value is not None:
+            if value is None:
+                pass
+            elif value == "":
+                pass
+            else:
                 translatable = make_from_obj(target, column.name, value)
                 setattr(target, column.name, translatable)
     return target
@@ -75,7 +86,11 @@ def add_to_flush_log(session, target, delete=False):
                 value = None  # will trigger deletion of translations
             else:
                 value = getattr(target, column.name)
-            if value is not None:
+            if value is None:
+                pass
+            elif value == "":
+                pass
+            else:
                 pending_translatables.add(value)
                 value = value.pending_value
             flush_log.setdefault(session, []).append(
@@ -123,12 +138,19 @@ def after_commit(session):
             # just needs to be not-None
             translatable = make_from_obj(target, column.name, '')
             translator.delete_translations(translatable)
+        elif value == "":
+            translatable = make_from_obj(target, column.name, '')
+            translator.delete_translations(translatable)
         else:
             translatable = make_from_obj(target, column.name, value)
             translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
-        if old_value is not None:
+        if old_value is None:
+            pass
+        elif old_value == "":
+            pass
+        else:
             # we may now have a primary key
             old_value.message_id = translatable.message_id
             # value is now saved. No need to keep around
