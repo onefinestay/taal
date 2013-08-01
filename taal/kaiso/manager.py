@@ -57,11 +57,7 @@ def collect_translatables(manager, obj):
             translations.append((attr_name, attr))
             # TODO: something better than this workaround
             # what do we want in the db?
-            setattr(obj, attr_name, None)
-
-    if not translations:
-        # so that we can check if this is empty before we start iterating
-        return None
+            setattr(obj, attr_name, None)  # placeholder, none or ""
 
     def iter_translatables():
         message_id = get_message_id(manager, obj)
@@ -87,28 +83,22 @@ class Manager(KaisoManager):
         return data
 
     def save(self, obj):
-        translatables = collect_translatables(self, obj)
+        translatables = list(collect_translatables(self, obj))
         saved = super(Manager, self).save(obj)
 
-        if translatables is None:
-            return saved
-
-        translator = get_translator(self)
-
+        if translatables:
+            translator = get_translator(self)
         for translatable in translatables:
             translator.save_translation(translatable)
 
         return saved
 
     def delete(self, obj):
-        translatables = collect_translatables(self, obj)
+        translatables = list(collect_translatables(self, obj))
         result = super(Manager, self).delete(obj)
 
-        if translatables is None:
-            return result
-
-        translator = get_translator(self)
-
+        if translatables:
+            translator = get_translator(self)
         for translatable in translatables:
             translator.delete_translations(translatable)
 
