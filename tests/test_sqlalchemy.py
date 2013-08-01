@@ -12,7 +12,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from taal import Translator, TranslatableString
 from tests.models import Model, RequiredModel, Translation, Parent, Child
 from taal.sqlalchemy.events import flush_log, load
-from taal.sqlalchemy.types import make_from_obj, NotNullValue
+from taal.sqlalchemy.types import make_from_obj
+from taal.constants import PlaceholderValue
 
 
 Base = declarative_base()
@@ -476,7 +477,7 @@ def test_query_values(session_cls):
     session1.commit()
 
     (value,) = session2.query(Model.name).one()
-    assert value == NotNullValue
+    assert value == PlaceholderValue
 
 
 def test_make_from_obj_error():
