@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import (
+    Column, Integer as SaInteger, String as SaString, Text, ForeignKey)
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from kaiso.types import Entity
@@ -21,8 +22,10 @@ class Translation(TranslationMixin, Base):
 
 class CustomFieldsEntity(Entity):
     id = KaisoInteger(unique=True)
-    name = taal_kaiso.TranslatableString()  # human readable
     identifier = KaisoString()
+    name = taal_kaiso.TranslatableString()
+    extra = taal_kaiso.TranslatableString()
+    null = taal_kaiso.TranslatableString()
 
 
 class NoCustomFieldsEntity(Entity):
@@ -30,28 +33,37 @@ class NoCustomFieldsEntity(Entity):
     identifier = KaisoString()
 
 
+class MultipleUniques(Entity):
+    id1 = KaisoInteger(unique=True, default=1)
+    id2 = KaisoInteger(unique=True, default=1)
+
+
+class InheritedUniques(MultipleUniques):
+    id3 = KaisoInteger(unique=True, default=1)
+
+
 class Parent(Base):
     __tablename__ = "test_parent"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(SaInteger, primary_key=True)
     name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
+    identifier = Column(SaString(20))
 
 
 class Child(Base):
     __tablename__ = "test_child"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(SaInteger, primary_key=True)
     name = Column(taal_sqlalchemy.TranslatableString(20))
-    identifier = Column(String(20))
-    parent_id = Column(Integer, ForeignKey('test_parent.id'))
+    identifier = Column(SaString(20))
+    parent_id = Column(SaInteger, ForeignKey('test_parent.id'))
     parent = relationship('Parent', backref='children')
 
 
 class Model(Base):
     __tablename__ = "models"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(SaInteger, primary_key=True)
     name = Column(taal_sqlalchemy.TranslatableString)
     identifier = Column(Text)
 
@@ -59,7 +71,7 @@ class Model(Base):
 class RequiredModel(Base):
     __tablename__ = "requiredmodels"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(SaInteger, primary_key=True)
     name = Column(taal_sqlalchemy.TranslatableString, nullable=False)
     identifier = Column(Text)
 

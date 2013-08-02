@@ -3,8 +3,9 @@ from weakref import WeakKeyDictionary
 from kaiso.persistence import Manager as KaisoManager
 
 from taal import TranslatableString as TaalTranslatableString
+from taal.constants import PLACEHOLDER
 from taal.exceptions import NoTranslatorRegistered
-from taal.kaiso import TranslatableString
+from taal.kaiso import TranslatableString, is_translatable_value
 from taal.kaiso.context_managers import (
     AttributeTranslationContextManager, TypeTranslationContextManager)
 from taal.kaiso.types import get_context, get_message_id
@@ -39,14 +40,12 @@ def _label_attributes(type_id, attrs):
 
 
 def collect_translatables(manager, obj):
-    """ collect translatables from obj
+    """ Yield translatables from ``obj``.
 
-        may also mutate obj to replace translations with placeholders
+    Mutates ``obj`` to replace translations with placeholders.
 
-        returns an iterable yielding the collecting translatables or None
-
-        expects translator.save_translation or translator.delete_translations
-        to be called for each collected translatable
+    Expects translator.save_translation or translator.delete_translations
+    to be called for each collected translatable.
     """
 
     translations = []
@@ -55,13 +54,12 @@ def collect_translatables(manager, obj):
         attr = getattr(obj, attr_name)
         if isinstance(attr_type, TranslatableString):
             translations.append((attr_name, attr))
-            # TODO: something better than this workaround
-            # what do we want in the db?
-            setattr(obj, attr_name, None)  # placeholder, none or ""
+            if is_translatable_value(attr):
+                setattr(obj, attr_name, PLACEHOLDER)
 
     def iter_translatables():
         message_id = get_message_id(manager, obj)
-        for attr_name, attr in translations:
+        for attr_name, attr in sorted(translations):
             context = get_context(manager, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)
@@ -77,9 +75,11 @@ class Manager(KaisoManager):
         descriptor = self.type_registry.get_descriptor(type(obj))
         for attr_name, attr_type in descriptor.attributes.items():
             if isinstance(attr_type, TranslatableString):
-                context = get_context(self, obj, attr_name)
-                data[attr_name] = TaalTranslatableString(
-                    context, message_id)
+                value = data[attr_name]
+                if is_translatable_value(value):
+                    context = get_context(self, obj, attr_name)
+                    data[attr_name] = TaalTranslatableString(
+                        context, message_id)
         return data
 
     def save(self, obj):
@@ -89,7 +89,11 @@ class Manager(KaisoManager):
         if translatables:
             translator = get_translator(self)
         for translatable in translatables:
-            translator.save_translation(translatable)
+            if is_translatable_value(translatable.pending_value):
+                translator.save_translation(translatable)
+            else:
+                # delete translations if the value is None or the empty string
+                translator.delete_translations(translatable)
 
         return saved
 

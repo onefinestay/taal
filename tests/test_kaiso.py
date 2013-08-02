@@ -3,8 +3,6 @@ from __future__ import absolute_import
 import json
 
 import pytest
-from kaiso.types import Entity
-from kaiso.attributes import Integer
 
 from taal import translation_manager, TranslatableString, Translator
 from taal.kaiso.context_managers import (
@@ -13,7 +11,7 @@ from taal.kaiso.types import get_context, get_message_id, make_from_obj
 
 from tests.models import (
     CustomFieldsEntity, NoCustomFieldsEntity, Translation,
-    create_translation_for_entity)
+    create_translation_for_entity, MultipleUniques, InheritedUniques)
 
 
 def test_kaiso_context_managers(manager, type_heirarchy):
@@ -37,11 +35,6 @@ def test_kaiso_translation_manager(manager, type_heirarchy):
         ('taal:kaiso_attr', '["Animal", "id"]'),
         ('taal:kaiso_attr', '["Animal", "name"]'),
     ])
-
-
-class MultipleUniques(Entity):
-    id1 = Integer(unique=True, default=1)
-    id2 = Integer(unique=True, default=1)
 
 
 def test_field(manager):
@@ -72,11 +65,23 @@ def test_context_message_id(session, manager):
     assert translation.message_id == expected_message_id
 
 
-def test_multiple_uniques(manager):
+def test_message_id_for_multiple_uniques(manager):
     item = MultipleUniques()
     manager.save(item)
     message_id = get_message_id(manager, item)
     expected_message_id = json.dumps([
+        ("multipleuniques", "id1", 1),
+        ("multipleuniques", "id2", 1),
+    ])
+    assert message_id == expected_message_id
+
+
+def test_message_id_for_inherited_uniques(manager):
+    item = InheritedUniques()
+    manager.save(item)
+    message_id = get_message_id(manager, item)
+    expected_message_id = json.dumps([
+        ("inheriteduniques", "id3", 1),
         ("multipleuniques", "id1", 1),
         ("multipleuniques", "id2", 1),
     ])
@@ -103,7 +108,7 @@ def test_get_translation(session, manager):
 
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
-    item = CustomFieldsEntity(id=0, name="Name")
+    item = CustomFieldsEntity(id=0, name="Name", extra="", null=None)
     manager.save(item)
 
     # make a fresh session each time
