@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError, StatementError
 from sqlalchemy.ext.declarative import declarative_base
 
 # from taal.models import TranslationMixin
-from taal import Translator, TranslatableString, is_translatable
+from taal import Translator, TranslatableString, is_translatable_value
 from tests.models import Model, RequiredModel, Translation, Parent, Child
 from taal.sqlalchemy.events import flush_log, load
 from taal.sqlalchemy.types import make_from_obj, NotNullValue
@@ -296,13 +296,13 @@ def test_removing_translations(session, session_cls, first, second):
     session.add(instance)
     session.commit()
 
-    expected_count = 1 if is_translatable(first) else 0
+    expected_count = 1 if is_translatable_value(first) else 0
     assert translator.session.query(Translation).count() == expected_count
 
     instance.name = second
     session.commit()
 
-    expected_count = 1 if is_translatable(second) else 0
+    expected_count = 1 if is_translatable_value(second) else 0
     assert translator.session.query(Translation).count() == expected_count
 
 

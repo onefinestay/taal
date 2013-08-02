@@ -4,7 +4,8 @@ from weakref import WeakSet
 from sqlalchemy import event, inspect, types
 from sqlalchemy.orm.mapper import Mapper
 
-from taal import TranslatableString as TaalTranslatableString, is_translatable
+from taal import (
+    TranslatableString as TaalTranslatableString, is_translatable_value)
 
 
 CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"
@@ -23,7 +24,7 @@ class TranslatableString(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
-        if not is_translatable(value):
+        if not is_translatable_value(value):
             return value
 
         if not isinstance(value, TaalTranslatableString):
@@ -42,7 +43,7 @@ class TranslatableString(types.TypeDecorator):
         return NOT_NULL
 
     def process_result_value(self, value, dialect):
-        if not is_translatable(value):
+        if not is_translatable_value(value):
             return value
 
         if value == NOT_NULL:

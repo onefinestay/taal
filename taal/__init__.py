@@ -22,7 +22,7 @@ except:  # pragma: no cover
 NULL = None  # for pep8
 
 
-def is_translatable(value):
+def is_translatable_value(value):
     return value not in ("", None)
 
 
