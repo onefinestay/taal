@@ -2,7 +2,7 @@ from weakref import WeakKeyDictionary
 
 from sqlalchemy import event, inspect
 
-from taal import TranslatableString as TaalTranslatableString
+from taal import TranslatableString as TaalTranslatableString, is_translatable
 from taal.sqlalchemy.types import (
     TranslatableString, pending_translatables, make_from_obj, NotNullValue)
 
@@ -23,10 +23,7 @@ def set_(target, value, oldvalue, initiator):
     """ Wrap any value in ``TranslatableString``, except None and the empty
     string
     """
-    if value is None:
-        return None
-
-    if value == "":
+    if not is_translatable(value):
         return value
 
     if isinstance(value, TaalTranslatableString):
@@ -43,9 +40,7 @@ def load(target, context):
     for column in mapper.columns:
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
-            if value is None:
-                continue
-            elif value == "":
+            if not is_translatable(value):
                 continue
             elif value is NotNullValue:
                 translatable = make_from_obj(target, column.name, value)
@@ -68,9 +63,7 @@ def refresh(target, args, attrs):
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
-            if value is None:
-                pass
-            elif value == "":
+            if not is_translatable(value):
                 pass
             else:
                 translatable = make_from_obj(target, column.name, value)
@@ -86,9 +79,7 @@ def add_to_flush_log(session, target, delete=False):
                 value = None  # will trigger deletion of translations
             else:
                 value = getattr(target, column.name)
-            if value is None:
-                pass
-            elif value == "":
+            if not is_translatable(value):
                 pass
             else:
                 pending_translatables.add(value)
@@ -133,12 +124,10 @@ def after_commit(session):
     """ Save any pending translations for this session """
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
-        if value is None:
+
+        if not is_translatable(value):
             # pending_value is ignored as we are deleting
             # just needs to be not-None
-            translatable = make_from_obj(target, column.name, '')
-            translator.delete_translations(translatable)
-        elif value == "":
             translatable = make_from_obj(target, column.name, '')
             translator.delete_translations(translatable)
         else:
@@ -146,9 +135,7 @@ def after_commit(session):
             translator.save_translation(translatable, commit=True)
 
         old_value = getattr(target, column.name)
-        if old_value is None:
-            pass
-        elif old_value == "":
+        if not is_translatable(old_value):
             pass
         else:
             # we may now have a primary key

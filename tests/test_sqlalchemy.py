@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from itertools import permutations
+import itertools
 
 import pytest
 from sqlalchemy import Column, Text, Integer
@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError, StatementError
 from sqlalchemy.ext.declarative import declarative_base
 
 # from taal.models import TranslationMixin
-from taal import Translator, TranslatableString
+from taal import Translator, TranslatableString, is_translatable
 from tests.models import Model, RequiredModel, Translation, Parent, Child
 from taal.sqlalchemy.events import flush_log, load
 from taal.sqlalchemy.types import make_from_obj, NotNullValue
@@ -20,8 +20,7 @@ Base = declarative_base()
 
 
 def transitions(*args):
-    selfies = [(arg, arg) for arg in args]
-    return selfies + list(permutations(args, 2))
+    return list(itertools.product(args, repeat=2))
 
 
 # initilisation
@@ -297,22 +296,14 @@ def test_removing_translations(session, session_cls, first, second):
     session.add(instance)
     session.commit()
 
-    if first is None:
-        assert translator.session.query(Translation).count() == 0
-    elif first == "":
-        assert translator.session.query(Translation).count() == 0
-    else:
-        assert translator.session.query(Translation).count() == 1
+    expected_count = 1 if is_translatable(first) else 0
+    assert translator.session.query(Translation).count() == expected_count
 
     instance.name = second
     session.commit()
 
-    if second is None:
-        assert translator.session.query(Translation).count() == 0
-    elif second == "":
-        assert translator.session.query(Translation).count() == 0
-    else:
-        assert translator.session.query(Translation).count() == 1
+    expected_count = 1 if is_translatable(second) else 0
+    assert translator.session.query(Translation).count() == expected_count
 
 
 def test_deleting(session, session_cls):

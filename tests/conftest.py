@@ -22,13 +22,14 @@ def pytest_addoption(parser):
 def pytest_collection_modifyitems(items):
     """ mark items by requirements for (de-)selecting """
     for item in items:
-        try:
-            if 'session_cls' in item.fixturenames:
-                item.keywords["sql"] = pytest.mark.sql
-            if 'manager' in item.fixturenames:
-                item.keywords["neo4j"] = pytest.mark.neo4j
-        except AttributeError:
-            pass  # test_requirements.txt collected erroneously
+        if item.__class__.__name__ == "DoctestTextfile":
+            # test_requirements.txt collected erroneously
+            continue
+
+        if 'session_cls' in item.fixturenames:
+            item.keywords["sql"] = pytest.mark.sql
+        if 'manager' in item.fixturenames:
+            item.keywords["neo4j"] = pytest.mark.neo4j
 
 
 @pytest.fixture(scope="function")

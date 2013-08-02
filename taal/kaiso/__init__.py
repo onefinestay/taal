@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from taal import is_translatable
+
 from kaiso.attributes import String
 
 
@@ -9,7 +11,7 @@ class TranslatableString(String):
         if not for_db:
             return value
 
-        if value is not None:
+        if is_translatable(value):
             raise RuntimeError(
                 "Cannot save directly to translated fields. "
                 "Value was '{}'".format(value))
