@@ -22,6 +22,10 @@ except:  # pragma: no cover
 NULL = None  # for pep8
 
 
+def is_translatable_value(value):
+    return value not in ("", None)
+
+
 class TranslatableString(object):
     """
     Placeholder for a string to be translated

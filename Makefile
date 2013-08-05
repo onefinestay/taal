@@ -14,7 +14,7 @@ develop:
 	pip install -r test_requirements.txt
 
 pytest:
-	py.test --cov taal tests ${MYSQL} ${NEO4J}
+	py.test --cov taal --cov-report term-missing tests ${MYSQL} ${NEO4J}
 
 flake8:
 	flake8 taal tests

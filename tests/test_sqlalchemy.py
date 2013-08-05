@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+import itertools
 
 import pytest
 from sqlalchemy import Column, Text, Integer
@@ -9,13 +10,17 @@ from sqlalchemy.exc import OperationalError, StatementError
 from sqlalchemy.ext.declarative import declarative_base
 
 # from taal.models import TranslationMixin
-from taal import Translator, TranslatableString
+from taal import Translator, TranslatableString, is_translatable_value
 from tests.models import Model, RequiredModel, Translation, Parent, Child
 from taal.sqlalchemy.events import flush_log, load
 from taal.sqlalchemy.types import make_from_obj, NotNullValue
 
 
 Base = declarative_base()
+
+
+def transitions(*args):
+    return list(itertools.product(args, repeat=2))
 
 
 # initilisation
@@ -31,17 +36,14 @@ def test_init_value():
     assert instance.name.pending_value == 'name'
 
 
-@pytest.mark.parametrize(("first", "second"), [
-    (None, None),
-    (None, 'other'),
-    ('name', None),
-    ('name', 'other'),
-])
+@pytest.mark.parametrize(("first", "second"), transitions(None, "", "x", "y"))
 def test_set_from_to(first, second):
     instance = Model(name=first)
     instance.name = second
     if second is None:
         assert instance.name is None
+    elif second == "":
+        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value == second
@@ -73,6 +75,13 @@ def test_save_none(bound_session):
     assert instance.name is None
 
 
+def test_save_empty_string(bound_session):
+    instance = Model(name='')
+    bound_session.add(instance)
+    bound_session.commit()
+    assert instance.name == ""
+
+
 def test_save_value(bound_session):
     instance = Model(name='name')
     bound_session.add(instance)
@@ -81,12 +90,7 @@ def test_save_value(bound_session):
     assert instance.name.pending_value is None
 
 
-@pytest.mark.parametrize(("first", "second"), [
-    (None, None),
-    (None, 'other'),
-    ('name', None),
-    ('name', 'other'),
-])
+@pytest.mark.parametrize(("first", "second"), transitions(None, "", "x", "y"))
 def test_modify_from_to(bound_session, first, second):
     instance = Model(name=first)
     bound_session.add(instance)
@@ -95,6 +99,8 @@ def test_modify_from_to(bound_session, first, second):
     bound_session.commit()
     if second is None:
         assert instance.name is None
+    elif second == "":
+        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value is None
@@ -175,12 +181,7 @@ def test_flushing(bound_session, session_cls, initial):
         assert isinstance(instance.name, TranslatableString)
 
 
-@pytest.mark.parametrize(("first", "second"), [
-    (None, None),
-    (None, 'other'),
-    ('name', None),
-    ('name', 'other'),
-])
+@pytest.mark.parametrize(("first", "second"), transitions(None, "", "x", "y"))
 def test_rollback(bound_session, first, second):
     instance = Model(name=first)
     bound_session.add(instance)
@@ -188,12 +189,16 @@ def test_rollback(bound_session, first, second):
     instance.name = second
     if second is None:
         assert instance.name is None
+    elif second == "":
+        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value == second
     bound_session.rollback()
     if first is None:
         assert instance.name is None
+    elif first == "":
+        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value is None
@@ -283,12 +288,7 @@ def test_dirty_but_not_modified(bound_session):
     bound_session.flush()
 
 
-@pytest.mark.parametrize(("first", "second"), [
-    (None, None),
-    (None, 'other'),
-    ('name', None),
-    ('name', 'other'),
-])
+@pytest.mark.parametrize(("first", "second"), transitions(None, "", "x", "y"))
 def test_removing_translations(session, session_cls, first, second):
     translator = Translator(Translation, session_cls(), 'language')
     translator.bind(session)
@@ -296,18 +296,14 @@ def test_removing_translations(session, session_cls, first, second):
     session.add(instance)
     session.commit()
 
-    if first is None:
-        assert translator.session.query(Translation).count() == 0
-    else:
-        assert translator.session.query(Translation).count() == 1
+    expected_count = 1 if is_translatable_value(first) else 0
+    assert translator.session.query(Translation).count() == expected_count
 
     instance.name = second
     session.commit()
 
-    if second is None:
-        assert translator.session.query(Translation).count() == 0
-    else:
-        assert translator.session.query(Translation).count() == 1
+    expected_count = 1 if is_translatable_value(second) else 0
+    assert translator.session.query(Translation).count() == expected_count
 
 
 def test_deleting(session, session_cls):
