@@ -5,10 +5,6 @@ from kaiso.attributes import String
 from taal.constants import PLACEHOLDER
 
 
-def is_translatable_value(value):
-    return value not in ("", None)
-
-
 class TranslatableString(String):
     @staticmethod
     def to_primitive(value, for_db):

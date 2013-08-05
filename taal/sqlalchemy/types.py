@@ -4,8 +4,9 @@ from weakref import WeakSet
 from sqlalchemy import event, inspect, types
 from sqlalchemy.orm.mapper import Mapper
 
-from taal import TranslatableString as TaalTranslatableString
 from taal.constants import PLACEHOLDER, PlaceholderValue
+from taal import (
+    TranslatableString as TaalTranslatableString, is_translatable_value)
 
 
 CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"
@@ -19,8 +20,8 @@ class TranslatableString(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
-        if value is None:
-            return None
+        if not is_translatable_value(value):
+            return value
 
         if not isinstance(value, TaalTranslatableString):
             # this should only happen if someone is trying to query
@@ -38,11 +39,12 @@ class TranslatableString(types.TypeDecorator):
         return PLACEHOLDER
 
     def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        elif value == "":
-            return ""
-        elif value == PLACEHOLDER:
+
+        if not is_translatable_value(value):
+            return value
+
+        if value == PLACEHOLDER:
+
             # can't prevent this from being returned to the user
             # in the case of a direct query for Model.field
             # Return something that's more likely to error early

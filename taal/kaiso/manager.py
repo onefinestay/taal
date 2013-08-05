@@ -2,10 +2,11 @@ from weakref import WeakKeyDictionary
 
 from kaiso.persistence import Manager as KaisoManager
 
-from taal import TranslatableString as TaalTranslatableString
+from taal import (
+    TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.constants import PLACEHOLDER
 from taal.exceptions import NoTranslatorRegistered
-from taal.kaiso import TranslatableString, is_translatable_value
+from taal.kaiso import TranslatableString
 from taal.kaiso.context_managers import (
     AttributeTranslationContextManager, TypeTranslationContextManager)
 from taal.kaiso.types import get_context, get_message_id
