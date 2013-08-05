@@ -122,12 +122,11 @@ def after_commit(session):
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
 
+        translatable = make_from_obj(target, column.name, value)
         if is_translatable_value(value):
-            translatable = make_from_obj(target, column.name, value)
             translator.save_translation(translatable, commit=True)
         else:
             # a non-translatable value in the commit log indicates a deletion
-            translatable = make_from_obj(target, column.name, '')
             translator.delete_translations(translatable)
 
         old_value = getattr(target, column.name)
