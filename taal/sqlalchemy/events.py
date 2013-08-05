@@ -64,9 +64,7 @@ def refresh(target, args, attrs):
         column = mapper.columns[column_name]
         if isinstance(column.type, TranslatableString):
             value = getattr(target, column.name)
-            if not is_translatable_value(value):
-                pass
-            else:
+            if is_translatable_value(value):
                 translatable = make_from_obj(target, column.name, value)
                 setattr(target, column.name, translatable)
     return target
@@ -80,9 +78,7 @@ def add_to_flush_log(session, target, delete=False):
                 value = None  # will trigger deletion of translations
             else:
                 value = getattr(target, column.name)
-            if not is_translatable_value(value):
-                pass
-            else:
+            if is_translatable_value(value):
                 pending_translatables.add(value)
                 value = value.pending_value
             flush_log.setdefault(session, []).append(
@@ -126,19 +122,16 @@ def after_commit(session):
     for transaction, target, column, value in flush_log.pop(session, []):
         translator = get_translator(session)
 
-        if not is_translatable_value(value):
-            # pending_value is ignored as we are deleting
-            # just needs to be not-None
-            translatable = make_from_obj(target, column.name, '')
-            translator.delete_translations(translatable)
-        else:
+        if is_translatable_value(value):
             translatable = make_from_obj(target, column.name, value)
             translator.save_translation(translatable, commit=True)
+        else:
+            # a non-translatable value in the commit log indicates a deletion
+            translatable = make_from_obj(target, column.name, '')
+            translator.delete_translations(translatable)
 
         old_value = getattr(target, column.name)
-        if not is_translatable_value(old_value):
-            pass
-        else:
+        if is_translatable_value(old_value):
             # we may now have a primary key
             old_value.message_id = translatable.message_id
             # value is now saved. No need to keep around
