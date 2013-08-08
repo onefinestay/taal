@@ -118,10 +118,15 @@ class Manager(KaisoManager):
         type_hierarchy = super(
             Manager, self).get_type_hierarchy(start_type_id)
 
-        for type_id, bases, attrs in type_hierarchy:
+        for type_id, bases, class_attrs, attrs in type_hierarchy:
             label = TaalTranslatableString(
                 context=TypeTranslationContextManager.context,
                 message_id=type_id
             )
             yield (
-                type_id, label, bases, _label_attributes(type_id, attrs))
+                type_id,
+                label,
+                bases,
+                class_attrs,
+                _label_attributes(type_id, attrs)
+            )
