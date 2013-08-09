@@ -93,7 +93,8 @@ class Manager(KaisoManager):
             if is_translatable_value(translatable.pending_value):
                 translator.save_translation(translatable)
             else:
-                # delete translations if the value is None or the empty string
+                # delete all translations (in every language) if the
+                # value is None or the empty string
                 translator.delete_translations(translatable)
 
         return saved
