@@ -65,13 +65,13 @@ def test_translating_class_labels(session, translating_type_heirarchy,
 def test_collect_translatables(bound_manager):
     manager = bound_manager
 
-    obj = CustomFieldsEntity(id=1, name="value", extra="", null=None)
+    obj = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
     manager.save(obj)
 
     translatables = collect_translatables(manager, obj)
 
     for attr_name, expected_value in (
-            ("extra", ""), ("name", PLACEHOLDER), ("null", None)):
+            ("extra1", ""), ("extra2", None), ("name", PLACEHOLDER)):
         translatable = next(translatables)
         assert translatable.context == get_context(manager, obj, attr_name)
         assert translatable.message_id == get_message_id(manager, obj)
@@ -87,23 +87,23 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
     translator = Translator(Translation, session, 'en')
     translator.bind(manager)
 
-    obj = CustomFieldsEntity(id=1, name='English name', extra="", null=None)
+    obj = CustomFieldsEntity(id=1, name='English name', extra1="", extra2=None)
     manager.save(obj)
 
     retrieved = manager.get(CustomFieldsEntity, id=1)
     assert retrieved.name == PLACEHOLDER
-    assert retrieved.extra == ""
-    assert retrieved.null is None
+    assert retrieved.extra1 == ""
+    assert retrieved.extra2 is None
 
     serialized = manager.serialize(retrieved)
     assert isinstance(serialized['name'], TranslatableString)
-    assert serialized['extra'] == ""
-    assert serialized['null'] is None
+    assert serialized['extra1'] == ""
+    assert serialized['extra2'] is None
 
     translated = translator.translate(serialized)
     assert translated['name'] == 'English name'
-    assert translated['extra'] == ""
-    assert translated['null'] is None
+    assert translated['extra1'] == ""
+    assert translated['extra2'] is None
 
 
 def test_save(session_cls, bound_manager):
@@ -114,26 +114,26 @@ def test_save(session_cls, bound_manager):
         assert session_cls().query(Translation).filter_by(
             context=context).one().value == expected_value
 
-    obj = CustomFieldsEntity(id=1, name="value", extra="", null=None)
+    obj = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
     manager.save(obj)
     assert session_cls().query(Translation).count() == 1
     check_value(obj, "name", "value")
 
-    obj.extra = "non-empty string"
+    obj.extra1 = "non-empty string"
     manager.save(obj)
     assert session_cls().query(Translation).count() == 2
-    check_value(obj, "extra", "non-empty string")
+    check_value(obj, "extra1", "non-empty string")
 
-    obj.null = "not null"
+    obj.extra2 = "not null"
     manager.save(obj)
     assert session_cls().query(Translation).count() == 3
-    check_value(obj, "null", "not null")
+    check_value(obj, "extra2", "not null")
 
-    obj.extra = ""
+    obj.extra1 = ""
     manager.save(obj)
     assert session_cls().query(Translation).count() == 2
 
-    obj.null = None
+    obj.extra2 = None
     manager.save(obj)
     assert session_cls().query(Translation).count() == 1
 
@@ -141,8 +141,8 @@ def test_save(session_cls, bound_manager):
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
 
-    obj1 = CustomFieldsEntity(id=1, name="value", extra="", null=None)
-    obj2 = CustomFieldsEntity(id=2, name="value", extra="", null=None)
+    obj1 = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
+    obj2 = CustomFieldsEntity(id=2, name="value", extra1="", extra2=None)
     manager.save(obj1)
     manager.save(obj2)
     assert session_cls().query(Translation).count() == 2

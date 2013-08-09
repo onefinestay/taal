@@ -24,8 +24,8 @@ class CustomFieldsEntity(Entity):
     id = KaisoInteger(unique=True)
     identifier = KaisoString()
     name = taal_kaiso.TranslatableString()
-    extra = taal_kaiso.TranslatableString()
-    null = taal_kaiso.TranslatableString()
+    extra1 = taal_kaiso.TranslatableString()
+    extra2 = taal_kaiso.TranslatableString()
 
 
 class NoCustomFieldsEntity(Entity):

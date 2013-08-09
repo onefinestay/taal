@@ -84,12 +84,11 @@ class Manager(KaisoManager):
         return data
 
     def save(self, obj):
-        translatables = list(collect_translatables(self, obj))
+        translatables = collect_translatables(self, obj)
         saved = super(Manager, self).save(obj)
 
-        if translatables:
-            translator = get_translator(self)
         for translatable in translatables:
+            translator = get_translator(self)
             if is_translatable_value(translatable.pending_value):
                 translator.save_translation(translatable)
             else:
@@ -100,12 +99,11 @@ class Manager(KaisoManager):
         return saved
 
     def delete(self, obj):
-        translatables = list(collect_translatables(self, obj))
+        translatables = collect_translatables(self, obj)
         result = super(Manager, self).delete(obj)
 
-        if translatables:
-            translator = get_translator(self)
         for translatable in translatables:
+            translator = get_translator(self)
             translator.delete_translations(translatable)
 
         return result

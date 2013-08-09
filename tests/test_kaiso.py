@@ -108,7 +108,7 @@ def test_get_translation(session, manager):
 
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
-    item = CustomFieldsEntity(id=0, name="Name", extra="", null=None)
+    item = CustomFieldsEntity(id=0, name="Name", extra1="", extra2=None)
     manager.save(item)
 
     # make a fresh session each time
