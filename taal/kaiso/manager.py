@@ -60,7 +60,7 @@ def collect_translatables(manager, obj):
 
     def iter_translatables():
         message_id = get_message_id(manager, obj)
-        for attr_name, attr in sorted(translations):
+        for attr_name, attr in translations:
             context = get_context(manager, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)

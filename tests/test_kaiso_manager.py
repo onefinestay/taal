@@ -70,15 +70,20 @@ def test_collect_translatables(bound_manager):
 
     translatables = collect_translatables(manager, obj)
 
-    for attr_name, expected_value in (
-            ("extra1", ""), ("extra2", None), ("name", PLACEHOLDER)):
-        translatable = next(translatables)
+    expected_values = {
+        "name": PLACEHOLDER,
+        "extra1": "",
+        "extra2": None
+    }
+
+    for translatable in translatables:
+        attr_name = translatable.context.split(":")[-1]
+        expected_value = expected_values.pop(attr_name)
         assert translatable.context == get_context(manager, obj, attr_name)
         assert translatable.message_id == get_message_id(manager, obj)
         assert translatable.pending_value == expected_value
 
-    with pytest.raises(StopIteration):
-        translatables.next()
+    assert expected_values == {}
 
 
 def test_serialize(session, translating_type_heirarchy, bound_manager):
