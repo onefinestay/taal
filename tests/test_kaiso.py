@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import json
 
 import pytest
+from mock import patch
 
 from taal import translation_manager, TranslatableString, Translator
 from taal.kaiso.context_managers import (
@@ -45,10 +46,26 @@ def test_field(manager):
     assert retrieved.identifier == "foo"
 
 
-def test_cant_set_translatable_field(manager):
+def test_cant_set_translatable_field_directly(manager):
     item = CustomFieldsEntity(name="foo")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as excinfo:
         manager.save(item)
+    assert excinfo.value.message.startswith(
+        "Cannot save directly to translated fields")
+
+
+def test_load_unexpected_value(bound_manager):
+    manager = bound_manager
+
+    item = CustomFieldsEntity(id=1, name="foo")
+    with patch('taal.kaiso.TranslatableString.to_primitive') as to_primitive:
+        to_primitive.return_value = "invalid-value"
+        manager.save(item)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        manager.get(CustomFieldsEntity, id=1)
+    assert excinfo.value.message.startswith(
+        "Unexpected value found in placeholder column")
 
 
 def test_context_message_id(session, manager):

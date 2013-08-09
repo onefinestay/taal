@@ -1,7 +1,7 @@
 import pytest
 
 from taal import TranslatableString, Translator
-from taal.constants import PLACEHOLDER
+from taal.constants import PLACEHOLDER, PlaceholderValue
 from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso.context_managers import TypeTranslationContextManager
 from taal.kaiso.manager import collect_translatables
@@ -96,7 +96,7 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
     manager.save(obj)
 
     retrieved = manager.get(CustomFieldsEntity, id=1)
-    assert retrieved.name == PLACEHOLDER
+    assert retrieved.name == PlaceholderValue
     assert retrieved.extra1 == ""
     assert retrieved.extra2 is None
 

@@ -41,35 +41,33 @@ def _label_attributes(type_id, attrs):
 
 
 def collect_translatables(manager, obj):
-    """ Yield translatables from ``obj``.
+    """ Return translatables from ``obj``.
 
     Mutates ``obj`` to replace translations with placeholders.
 
     Expects translator.save_translation or translator.delete_translations
     to be called for each collected translatable.
     """
+    translatables = []
 
-    translations = []
     descriptor = manager.type_registry.get_descriptor(type(obj))
+    message_id = get_message_id(manager, obj)
+
     for attr_name, attr_type in descriptor.attributes.items():
         attr = getattr(obj, attr_name)
         if isinstance(attr_type, TranslatableString):
-            translations.append((attr_name, attr))
             if is_translatable_value(attr):
                 setattr(obj, attr_name, PLACEHOLDER)
-
-    def iter_translatables():
-        message_id = get_message_id(manager, obj)
-        for attr_name, attr in translations:
             context = get_context(manager, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)
-            yield translatable
+            translatables.append(translatable)
 
-    return iter_translatables()
+    return translatables
 
 
 class Manager(KaisoManager):
+
     def serialize(self, obj):
         message_id = get_message_id(self, obj)
         data = super(Manager, self).serialize(obj)
@@ -85,26 +83,28 @@ class Manager(KaisoManager):
 
     def save(self, obj):
         translatables = collect_translatables(self, obj)
-        saved = super(Manager, self).save(obj)
+        result = super(Manager, self).save(obj)
 
-        for translatable in translatables:
+        if translatables:
             translator = get_translator(self)
-            if is_translatable_value(translatable.pending_value):
-                translator.save_translation(translatable)
-            else:
-                # delete all translations (in every language) if the
-                # value is None or the empty string
-                translator.delete_translations(translatable)
+            for translatable in translatables:
+                if is_translatable_value(translatable.pending_value):
+                    translator.save_translation(translatable)
+                else:
+                    # delete all translations (in every language) if the
+                    # value is None or the empty string
+                    translator.delete_translations(translatable)
 
-        return saved
+        return result
 
     def delete(self, obj):
         translatables = collect_translatables(self, obj)
         result = super(Manager, self).delete(obj)
 
-        for translatable in translatables:
+        if translatables:
             translator = get_translator(self)
-            translator.delete_translations(translatable)
+            for translatable in translatables:
+                translator.delete_translations(translatable)
 
         return result
 
