@@ -25,11 +25,8 @@ class TranslatableString(String):
             return value
 
         if value == PLACEHOLDER:
-
-            # can't prevent this from being returned to the user
-            # in the case of a direct query for Model.field
-            # Return something that's more likely to error early
-            # than a string
+            # Before translation, return a placeholder that's more likely to
+            # generate an error than a normal string.
             return PlaceholderValue
 
         raise RuntimeError(
