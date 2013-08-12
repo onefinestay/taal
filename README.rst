@@ -34,6 +34,8 @@ Example use
         id = Column(Integer, primary_key=True)
         name = Column(TranslatableString())
 
+::
+
 
     >>> instance = session.query(MyModel).first()
     >>> instance.name
