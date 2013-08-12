@@ -11,3 +11,5 @@ section to define your database and neo4j connection strings::
     $ cat setup.cfg
     [pytest]
     addopts= --neo4j_uri=http://... --db_uri=mysql://...
+
+(Note that pytest gets upset if you indent the ``addopts`` line)
