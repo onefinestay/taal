@@ -5,8 +5,7 @@ from kaiso.persistence import Manager as KaisoManager
 from taal import TranslatableString as TaalTranslatableString
 from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso import TranslatableString
-from taal.kaiso.context_managers import (
-    AttributeTranslationContextManager, TypeTranslationContextManager)
+from taal.kaiso.context_managers import TypeTranslationContextManager
 from taal.kaiso.types import get_context, get_message_id
 
 
@@ -23,19 +22,6 @@ def get_translator(owner):
     except KeyError:
         raise NoTranslatorRegistered(
             "No translator registered for {}".format(owner))
-
-
-def _label_attributes(type_id, attrs):
-    labelled_attrs = []
-    for attr in attrs:
-        label = TaalTranslatableString(
-            context=AttributeTranslationContextManager.context,
-            message_id=AttributeTranslationContextManager.get_message_id(
-                type_id, attr)
-        )
-        attr.label = label
-        labelled_attrs.append(attr)
-    return labelled_attrs
 
 
 def collect_translatables(manager, obj):
@@ -123,5 +109,4 @@ class Manager(KaisoManager):
                 context=TypeTranslationContextManager.context,
                 message_id=type_id
             )
-            yield (
-                type_id, label, bases, _label_attributes(type_id, attrs))
+            yield (type_id, label, bases, attrs)

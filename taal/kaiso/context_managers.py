@@ -28,9 +28,9 @@ class AttributeTranslationContextManager(TranslationContextManager):
         self.manager = manager
 
     @staticmethod
-    def get_message_id(type_id, attr):
+    def get_message_id(type_id, attr_name):
         return json.dumps(
-            [type_id, attr.name]
+            [type_id, attr_name]
         )
 
     def list_message_ids(self):
