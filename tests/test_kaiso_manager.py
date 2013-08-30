@@ -22,27 +22,6 @@ def test_labeled_hierarchy(session, translating_type_heirarchy, bound_manager):
     assert isinstance(entity[1], TranslatableString)
 
 
-def test_labeled_hierarchy_attributes(session, translating_type_heirarchy,
-                                      bound_manager):
-    manager = bound_manager
-
-    translator = Translator(Translation, session, 'en')
-    translator.bind(manager)
-
-    hierarchy = manager.get_labeled_type_hierarchy()
-    data = {}
-    for type_id, label, _, attrs in hierarchy:
-        data[type_id] = {
-            'label': label,
-            'attrs': attrs,
-        }
-
-    animal = data['Animal']
-    attrs = {attr.name: attr for attr in animal['attrs']}
-    name_attr = attrs['name']
-    assert isinstance(name_attr.label, TranslatableString)
-
-
 def test_translating_class_labels(session, translating_type_heirarchy,
                                   bound_manager):
     manager = bound_manager
