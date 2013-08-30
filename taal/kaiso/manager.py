@@ -2,7 +2,9 @@ from weakref import WeakKeyDictionary
 
 from kaiso.persistence import Manager as KaisoManager
 
-from taal import TranslatableString as TaalTranslatableString
+from taal import (
+    TranslatableString as TaalTranslatableString, is_translatable_value)
+from taal.constants import PLACEHOLDER
 from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso import TranslatableString
 from taal.kaiso.context_managers import TypeTranslationContextManager
@@ -25,78 +27,70 @@ def get_translator(owner):
 
 
 def collect_translatables(manager, obj):
-    """ collect translatables from obj
+    """ Return translatables from ``obj``.
 
-        may also mutate obj to replace translations with placeholders
+    Mutates ``obj`` to replace translations with placeholders.
 
-        returns an iterable yielding the collecting translatables or None
-
-        expects translator.save_translation or translator.delete_translations
-        to be called for each collected translatable
+    Expects translator.save_translation or translator.delete_translations
+    to be called for each collected translatable.
     """
+    translatables = []
 
-    translations = []
     descriptor = manager.type_registry.get_descriptor(type(obj))
+    message_id = get_message_id(manager, obj)
+
     for attr_name, attr_type in descriptor.attributes.items():
         attr = getattr(obj, attr_name)
         if isinstance(attr_type, TranslatableString):
-            translations.append((attr_name, attr))
-            # TODO: something better than this workaround
-            # what do we want in the db?
-            setattr(obj, attr_name, None)
-
-    if not translations:
-        # so that we can check if this is empty before we start iterating
-        return None
-
-    def iter_translatables():
-        message_id = get_message_id(manager, obj)
-        for attr_name, attr in translations:
+            if is_translatable_value(attr):
+                setattr(obj, attr_name, PLACEHOLDER)
             context = get_context(manager, obj, attr_name)
             translatable = TaalTranslatableString(
                 context, message_id, attr)
-            yield translatable
+            translatables.append(translatable)
 
-    return iter_translatables()
+    return translatables
 
 
 class Manager(KaisoManager):
+
     def serialize(self, obj):
         message_id = get_message_id(self, obj)
         data = super(Manager, self).serialize(obj)
         descriptor = self.type_registry.get_descriptor(type(obj))
         for attr_name, attr_type in descriptor.attributes.items():
             if isinstance(attr_type, TranslatableString):
-                context = get_context(self, obj, attr_name)
-                data[attr_name] = TaalTranslatableString(
-                    context, message_id)
+                value = data[attr_name]
+                if is_translatable_value(value):
+                    context = get_context(self, obj, attr_name)
+                    data[attr_name] = TaalTranslatableString(
+                        context, message_id)
         return data
 
     def save(self, obj):
         translatables = collect_translatables(self, obj)
-        saved = super(Manager, self).save(obj)
+        result = super(Manager, self).save(obj)
 
-        if translatables is None:
-            return saved
+        if translatables:
+            translator = get_translator(self)
+            for translatable in translatables:
+                if is_translatable_value(translatable.pending_value):
+                    translator.save_translation(translatable)
+                else:
+                    # delete all translations (in every language) if the
+                    # value is None or the empty string
+                    translator.delete_translations(translatable)
 
-        translator = get_translator(self)
-
-        for translatable in translatables:
-            translator.save_translation(translatable)
-
-        return saved
+        return result
 
     def delete(self, obj):
         translatables = collect_translatables(self, obj)
         result = super(Manager, self).delete(obj)
 
-        if translatables is None:
-            return result
-
-        translator = get_translator(self)
-
-        for translatable in translatables:
-            translator.delete_translations(translatable)
+        if translatables:
+            translator = get_translator(self)
+            for translatable in translatables:
+                translator.delete_translations(translatable)
 
         return result
 

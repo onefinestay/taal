@@ -13,7 +13,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from taal import Translator, TranslatableString, is_translatable_value
 from tests.models import Model, RequiredModel, Translation, Parent, Child
 from taal.sqlalchemy.events import flush_log, load
-from taal.sqlalchemy.types import make_from_obj, NotNullValue
+from taal.sqlalchemy.types import make_from_obj
+from taal.constants import PlaceholderValue
 
 
 Base = declarative_base()
@@ -42,8 +43,6 @@ def test_set_from_to(first, second):
     instance.name = second
     if second is None:
         assert instance.name is None
-    elif second == "":
-        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value == second
@@ -79,7 +78,8 @@ def test_save_empty_string(bound_session):
     instance = Model(name='')
     bound_session.add(instance)
     bound_session.commit()
-    assert instance.name == ""
+    assert isinstance(instance.name, TranslatableString)
+    assert instance.name.pending_value is None
 
 
 def test_save_value(bound_session):
@@ -99,8 +99,6 @@ def test_modify_from_to(bound_session, first, second):
     bound_session.commit()
     if second is None:
         assert instance.name is None
-    elif second == "":
-        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value is None
@@ -189,16 +187,12 @@ def test_rollback(bound_session, first, second):
     instance.name = second
     if second is None:
         assert instance.name is None
-    elif second == "":
-        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value == second
     bound_session.rollback()
     if first is None:
         assert instance.name is None
-    elif first == "":
-        assert instance.name == ""
     else:
         assert isinstance(instance.name, TranslatableString)
         assert instance.name.pending_value is None
@@ -472,7 +466,7 @@ def test_query_values(session_cls):
     session1.commit()
 
     (value,) = session2.query(Model.name).one()
-    assert value == NotNullValue
+    assert value == PlaceholderValue
 
 
 def test_make_from_obj_error():

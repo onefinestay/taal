@@ -10,6 +10,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.expression import tuple_, and_, or_
 
+from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
 
 
@@ -23,7 +24,7 @@ NULL = None  # for pep8
 
 
 def is_translatable_value(value):
-    return value not in ("", None)
+    return value not in TRANSPARENT_VALUES
 
 
 class TranslatableString(object):
