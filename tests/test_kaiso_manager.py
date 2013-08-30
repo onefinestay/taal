@@ -72,7 +72,7 @@ def test_collect_translatables(bound_manager):
 
     expected_values = {
         "name": PLACEHOLDER,
-        "extra1": "",
+        "extra1": PLACEHOLDER,
         "extra2": None
     }
 
@@ -97,12 +97,12 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
 
     retrieved = manager.get(CustomFieldsEntity, id=1)
     assert retrieved.name == PlaceholderValue
-    assert retrieved.extra1 == ""
+    assert retrieved.extra1 == PlaceholderValue
     assert retrieved.extra2 is None
 
     serialized = manager.serialize(retrieved)
     assert isinstance(serialized['name'], TranslatableString)
-    assert serialized['extra1'] == ""
+    assert isinstance(serialized['extra1'], TranslatableString)
     assert serialized['extra2'] is None
 
     translated = translator.translate(serialized)
@@ -121,8 +121,9 @@ def test_save(session_cls, bound_manager):
 
     obj = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
     manager.save(obj)
-    assert session_cls().query(Translation).count() == 1
+    assert session_cls().query(Translation).count() == 2
     check_value(obj, "name", "value")
+    check_value(obj, "extra1", "")
 
     obj.extra1 = "non-empty string"
     manager.save(obj)
@@ -136,11 +137,11 @@ def test_save(session_cls, bound_manager):
 
     obj.extra1 = ""
     manager.save(obj)
-    assert session_cls().query(Translation).count() == 2
+    assert session_cls().query(Translation).count() == 3
 
     obj.extra2 = None
     manager.save(obj)
-    assert session_cls().query(Translation).count() == 1
+    assert session_cls().query(Translation).count() == 2
 
 
 def test_delete(session_cls, bound_manager):
@@ -150,10 +151,10 @@ def test_delete(session_cls, bound_manager):
     obj2 = CustomFieldsEntity(id=2, name="value", extra1="", extra2=None)
     manager.save(obj1)
     manager.save(obj2)
-    assert session_cls().query(Translation).count() == 2
+    assert session_cls().query(Translation).count() == 4
 
     manager.delete(obj1)
-    assert session_cls().query(Translation).count() == 1
+    assert session_cls().query(Translation).count() == 2
 
     manager.delete(obj2)
     assert session_cls().query(Translation).count() == 0

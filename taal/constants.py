@@ -3,7 +3,7 @@
 PLACEHOLDER = "taal:placeholder"
 
 # transparent values are passed through taal without being translated
-TRANSPARENT_VALUES = ("", None)
+TRANSPARENT_VALUES = (None,)
 
 
 class PlaceholderValue(object):

@@ -129,7 +129,7 @@ def test_delete(session_cls, bound_manager):
     manager.save(item)
 
     # make a fresh session each time
-    assert session_cls().query(Translation).count() == 1
+    assert session_cls().query(Translation).count() == 2
     manager.delete(item)
     assert session_cls().query(Translation).count() == 0
 
