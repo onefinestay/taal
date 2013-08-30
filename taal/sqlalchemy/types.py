@@ -4,19 +4,15 @@ from weakref import WeakSet
 from sqlalchemy import event, inspect, types
 from sqlalchemy.orm.mapper import Mapper
 
+from taal.constants import PLACEHOLDER, PlaceholderValue
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
 
 
 CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"
-NOT_NULL = "taal:placeholder"
 
 
 pending_translatables = WeakSet()  # to aid debugging
-
-
-class NotNullValue(object):
-    pass
 
 
 class TranslatableString(types.TypeDecorator):
@@ -40,22 +36,23 @@ class TranslatableString(types.TypeDecorator):
                 "Use ``save_translation`` instead "
                 "Value was '{}'".format(value))
 
-        return NOT_NULL
+        return PLACEHOLDER
 
     def process_result_value(self, value, dialect):
+
         if not is_translatable_value(value):
             return value
 
-        if value == NOT_NULL:
+        if value == PLACEHOLDER:
+
             # can't prevent this from being returned to the user
             # in the case of a direct query for Model.field
             # Return something that's more likely to error early
             # than a string
-            return NotNullValue
+            return PlaceholderValue
 
         raise RuntimeError(
-            "Unexpected value found in placeholer column: '{}'".format(
-                value))
+            "Unexpected value found in placeholder column: '{}'".format(value))
 
 
 def get_context(obj, column):
@@ -76,7 +73,7 @@ def make_from_obj(obj, column, pending_value):
     context = get_context(obj, column)
     message_id = get_message_id(obj)
 
-    if pending_value is NotNullValue:
+    if pending_value is PlaceholderValue:
         pending_value = None
 
     if isinstance(pending_value, TaalTranslatableString):

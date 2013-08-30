@@ -32,7 +32,7 @@ def pytest_collection_modifyitems(items):
             item.keywords["neo4j"] = pytest.mark.neo4j
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def manager(request):
     # kaiso manager
     from kaiso.persistence import Manager
@@ -43,7 +43,7 @@ def manager(request):
     return manager
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def translating_manager(request):
     # taal manager
     from taal.kaiso.manager import Manager
@@ -54,7 +54,16 @@ def translating_manager(request):
     return manager
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
+def type_heirarchy(manager):
+    """ Saves the type heirarchy defined in ``tests.kaiso`` using a normal
+    kaiso manager
+    """
+    from tests.kaiso import Fish
+    manager.save(Fish)
+
+
+@pytest.fixture
 def bound_manager(request, session_cls, translating_manager):
     # importing at the module level messes up coverage
     from taal import Translator
@@ -65,6 +74,17 @@ def bound_manager(request, session_cls, translating_manager):
     translator = Translator(Translation, session_cls(), 'language')
     translator.bind(manager)
     return manager
+
+
+@pytest.fixture
+def translating_type_heirarchy(bound_manager):
+    """ Saves the type heirarchy defined in ``tests.kaiso`` using a
+    bound, translating manager
+    """
+    from tests.kaiso import Fish
+
+    manager = bound_manager
+    manager.save(Fish)
 
 
 @pytest.fixture(scope="session")
@@ -89,7 +109,7 @@ def clean_engine(request):
     return engine
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def session_cls(request, clean_engine):
     from tests.models import Base
     engine = clean_engine

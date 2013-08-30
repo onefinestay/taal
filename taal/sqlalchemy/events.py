@@ -5,7 +5,8 @@ from sqlalchemy import event, inspect
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.sqlalchemy.types import (
-    TranslatableString, pending_translatables, make_from_obj, NotNullValue)
+    TranslatableString, pending_translatables, make_from_obj)
+from taal.constants import PlaceholderValue
 
 
 translator_registry = WeakKeyDictionary()
@@ -43,7 +44,7 @@ def load(target, context):
             value = getattr(target, column.name)
             if not is_translatable_value(value):
                 continue
-            elif value is NotNullValue:
+            elif value is PlaceholderValue:
                 translatable = make_from_obj(target, column.name, value)
                 setattr(target, column.name, translatable)
             elif isinstance(value, TaalTranslatableString):
