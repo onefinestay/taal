@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+
+from kaiso.exceptions import DeserialisationError
 import pytest
 
 from taal import TranslatableString, Translator
@@ -88,6 +91,44 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
     assert translated['name'] == 'English name'
     assert translated['extra1'] == ""
     assert translated['extra2'] is None
+
+
+def test_deserialize(session, translating_type_heirarchy, bound_manager):
+    manager = bound_manager
+
+    object_dict = {
+        '__type__': 'CustomFieldsEntity',
+        'id': 1,
+        'name': 'English name',
+        'extra1': None,
+    }
+
+    obj = manager.deserialize(object_dict)
+    assert obj.id == 1
+    assert obj.name == 'English name'
+    assert obj.extra1 is None
+
+
+def test_deserialize_error(bound_manager):
+    manager = bound_manager
+
+    object_dict = {
+        'name': 'English name',
+    }
+
+    with pytest.raises(DeserialisationError):
+        manager.deserialize(object_dict)
+
+
+def test_deserialize_class(bound_manager):
+    manager = bound_manager
+
+    object_dict = {
+        '__type__': 'PersistableType',
+        'id': 'CustomFieldsEntity',
+    }
+    obj = manager.deserialize(object_dict)
+    assert obj is CustomFieldsEntity
 
 
 def test_save(session_cls, bound_manager):
