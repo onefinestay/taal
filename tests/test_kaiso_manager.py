@@ -93,7 +93,8 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
     assert translated['extra2'] is None
 
 
-def test_deserialize(session, translating_type_heirarchy, bound_manager):
+def test_deserialize_instance(
+        session, translating_type_heirarchy, bound_manager):
     manager = bound_manager
 
     object_dict = {
@@ -109,7 +110,7 @@ def test_deserialize(session, translating_type_heirarchy, bound_manager):
     assert obj.extra1 is None
 
 
-def test_deserialize_error(bound_manager):
+def test_cannot_deserialize_without_type_key(bound_manager):
     manager = bound_manager
 
     object_dict = {
@@ -120,7 +121,7 @@ def test_deserialize_error(bound_manager):
         manager.deserialize(object_dict)
 
 
-def test_deserialize_class(bound_manager):
+def test_deserialize_type(bound_manager):
     manager = bound_manager
 
     object_dict = {
