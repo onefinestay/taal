@@ -1,5 +1,6 @@
 from weakref import WeakKeyDictionary
 
+from kaiso.exceptions import DeserialisationError
 from kaiso.persistence import Manager as KaisoManager
 
 from taal import (
@@ -66,6 +67,31 @@ class Manager(KaisoManager):
                     data[attr_name] = TaalTranslatableString(
                         context, message_id)
         return data
+
+    def deserialize(self, object_dict):
+        # we don't need to do any translation here; we just need to
+        # pop off any values for translatable fields during deserialization
+        # and put them back afterwards
+
+        try:
+            type_id = object_dict['__type__']
+        except KeyError:
+            raise DeserialisationError(
+                'properties "{}" missing __type__ key'.format(object_dict))
+
+        descriptor = self.type_registry.get_descriptor_by_id(type_id)
+        translatables = {}
+        for attr_name, attr_type in descriptor.attributes.items():
+            if isinstance(attr_type, TranslatableString):
+                if attr_name not in object_dict:
+                    continue
+                translatables[attr_name] = object_dict.pop(attr_name)
+
+        obj = super(Manager, self).deserialize(object_dict)
+        for attr_name, value in translatables.items():
+            setattr(obj, attr_name, value)
+
+        return obj
 
     def save(self, obj):
         translatables = collect_translatables(self, obj)
