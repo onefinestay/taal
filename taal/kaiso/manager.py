@@ -1,3 +1,4 @@
+import copy
 from weakref import WeakKeyDictionary
 
 from kaiso.exceptions import DeserialisationError
@@ -89,13 +90,17 @@ class Manager(KaisoManager):
 
         descriptor = self.type_registry.get_descriptor_by_id(type_id)
         translatables = {}
+
+        # deserialize a copy so we don't mutate object_dict
+        object_dict_copy = copy.copy(object_dict)
+
         for attr_name, attr_type in descriptor.attributes.items():
             if isinstance(attr_type, TranslatableString):
-                if attr_name not in object_dict:
+                if attr_name not in object_dict_copy:
                     continue
-                translatables[attr_name] = object_dict.pop(attr_name)
+                translatables[attr_name] = object_dict_copy.pop(attr_name)
 
-        obj = super(Manager, self).deserialize(object_dict)
+        obj = super(Manager, self).deserialize(object_dict_copy)
         for attr_name, value in translatables.items():
             setattr(obj, attr_name, value)
 
