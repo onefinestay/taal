@@ -138,13 +138,3 @@ def bound_session(request, session, session_cls):
     translator = Translator(Translation, session_cls(), 'language')
     translator.bind(session)
     return session
-
-
-# @pytest.fixture(autouse=True)
-# def temporary_static_types(request):
-    # from kaiso.test_helpers import TemporaryStaticTypes
-    # from tests.kaiso import Fish
-    # Fish  # pyflakes. Until we refactor tests that depend on Fish
-    # patcher = TemporaryStaticTypes()
-    # patcher.start()
-    # request.addfinalizer(patcher.stop)
