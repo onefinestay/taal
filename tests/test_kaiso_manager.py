@@ -193,3 +193,9 @@ def test_missing_bind(session, translating_manager):
     obj = CustomFieldsEntity(id=1, name='English name')
     with pytest.raises(NoTranslatorRegistered):
         manager.save(obj)
+
+
+def test_serializing_type(translating_manager):
+    # regression test
+    data = translating_manager.serialize(CustomFieldsEntity)
+    assert 'id' in data
