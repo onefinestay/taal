@@ -3,6 +3,7 @@ from weakref import WeakKeyDictionary
 
 from kaiso.exceptions import DeserialisationError
 from kaiso.persistence import Manager as KaisoManager
+from kaiso.types import PersistableType, get_type_id
 
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
@@ -36,6 +37,10 @@ def collect_translatables(manager, obj):
     Expects translator.save_translation or translator.delete_translations
     to be called for each collected translatable.
     """
+    if isinstance(obj, PersistableType):
+        # object is a type; nothing to do
+        return []
+
     translatables = []
 
     descriptor = manager.type_registry.get_descriptor(type(obj))
@@ -57,6 +62,9 @@ def collect_translatables(manager, obj):
 class Manager(KaisoManager):
 
     def serialize(self, obj):
+        if type(obj) is PersistableType:
+            return super(Manager, self).serialize(obj)
+
         message_id = get_message_id(self, obj)
         data = super(Manager, self).serialize(obj)
         descriptor = self.type_registry.get_descriptor(type(obj))
@@ -79,6 +87,9 @@ class Manager(KaisoManager):
         except KeyError:
             raise DeserialisationError(
                 'properties "{}" missing __type__ key'.format(object_dict))
+
+        if type_id == get_type_id(PersistableType):
+            return super(Manager, self).deserialize(object_dict)
 
         descriptor = self.type_registry.get_descriptor_by_id(type_id)
         translatables = {}

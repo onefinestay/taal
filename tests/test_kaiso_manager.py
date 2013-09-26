@@ -48,6 +48,7 @@ def test_collect_translatables(bound_manager):
     manager = bound_manager
 
     obj = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
+    manager.save(CustomFieldsEntity)
     manager.save(obj)
 
     translatables = collect_translatables(manager, obj)
@@ -75,6 +76,7 @@ def test_serialize(session, translating_type_heirarchy, bound_manager):
     translator.bind(manager)
 
     obj = CustomFieldsEntity(id=1, name='English name', extra1="", extra2=None)
+    manager.save(CustomFieldsEntity)
     manager.save(obj)
 
     retrieved = manager.get(CustomFieldsEntity, id=1)
@@ -140,6 +142,8 @@ def test_save(session_cls, bound_manager):
         assert session_cls().query(Translation).filter_by(
             context=context).one().value == expected_value
 
+    manager.save(CustomFieldsEntity)
+
     obj = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
     manager.save(obj)
     assert session_cls().query(Translation).count() == 2
@@ -168,6 +172,8 @@ def test_save(session_cls, bound_manager):
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
 
+    manager.save(CustomFieldsEntity)
+
     obj1 = CustomFieldsEntity(id=1, name="value", extra1="", extra2=None)
     obj2 = CustomFieldsEntity(id=2, name="value", extra1="", extra2=None)
     manager.save(obj1)
@@ -183,6 +189,13 @@ def test_delete(session_cls, bound_manager):
 
 def test_missing_bind(session, translating_manager):
     manager = translating_manager
+    manager.save(CustomFieldsEntity)
     obj = CustomFieldsEntity(id=1, name='English name')
     with pytest.raises(NoTranslatorRegistered):
         manager.save(obj)
+
+
+def test_serializing_type(translating_manager):
+    # regression test
+    data = translating_manager.serialize(CustomFieldsEntity)
+    assert 'id' in data
