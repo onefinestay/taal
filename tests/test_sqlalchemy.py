@@ -324,6 +324,23 @@ def test_deleting(session, session_cls):
     assert translator.session.query(Translation).count() == 0
 
 
+def test_edit_other_field(bound_session, session_cls):
+    # regression test for translation being removed when editing other fields
+    session = bound_session
+
+    instance = Model(id=1, identifier='key', name='name')
+    session.add(instance)
+    session.commit()
+
+    assert session.query(Translation).count() == 1
+
+    instance = session.query(Model).get(1)
+    instance.identifier = "key2"
+    session.commit()
+
+    assert session.query(Translation).count() == 1
+
+
 def test_unbound_session_errors(session):
     instance = Model(name='name')
     session.add(instance)
