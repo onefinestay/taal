@@ -1,6 +1,7 @@
 from weakref import WeakKeyDictionary
 
 from sqlalchemy import event, inspect
+from sqlalchemy.orm.attributes import get_history
 
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
@@ -74,6 +75,11 @@ def refresh(target, args, attrs):
 def add_to_flush_log(session, target, delete=False):
     mapper = inspect(target.__class__)
     for column in mapper.columns:
+        history = get_history(target, column.name)
+        if not delete and not history.has_changes():
+            # for non-delete actions, we're only interested in changed columns
+            continue
+
         if isinstance(column.type, TranslatableString):
             if delete:
                 value = None  # will trigger deletion of translations
