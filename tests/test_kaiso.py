@@ -39,6 +39,7 @@ def test_kaiso_translation_manager(manager, type_heirarchy):
 
 
 def test_field(manager):
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(id=0, identifier="foo")
     manager.save(item)
 
@@ -47,6 +48,7 @@ def test_field(manager):
 
 
 def test_cant_set_translatable_field_directly(manager):
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(name="foo")
     with pytest.raises(RuntimeError) as excinfo:
         manager.save(item)
@@ -57,6 +59,7 @@ def test_cant_set_translatable_field_directly(manager):
 def test_load_unexpected_value(bound_manager):
     manager = bound_manager
 
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(id=1, name="foo")
     with patch('taal.kaiso.TranslatableString.to_primitive') as to_primitive:
         to_primitive.return_value = "invalid-value"
@@ -69,6 +72,7 @@ def test_load_unexpected_value(bound_manager):
 
 
 def test_context_message_id(session, manager):
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(id=0)
     manager.save(item)
 
@@ -83,6 +87,7 @@ def test_context_message_id(session, manager):
 
 
 def test_message_id_for_multiple_uniques(manager):
+    manager.save(MultipleUniques)
     item = MultipleUniques()
     manager.save(item)
     message_id = get_message_id(manager, item)
@@ -94,6 +99,7 @@ def test_message_id_for_multiple_uniques(manager):
 
 
 def test_message_id_for_inherited_uniques(manager):
+    manager.save(InheritedUniques)
     item = InheritedUniques()
     manager.save(item)
     message_id = get_message_id(manager, item)
@@ -106,6 +112,7 @@ def test_message_id_for_inherited_uniques(manager):
 
 
 def test_get_translation(session, manager):
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity()
     manager.save(item)
 
@@ -125,6 +132,7 @@ def test_get_translation(session, manager):
 
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
+    manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(id=0, name="Name", extra1="", extra2=None)
     manager.save(item)
 
@@ -136,6 +144,7 @@ def test_delete(session_cls, bound_manager):
 
 def test_delete_no_translations(bound_manager):
     manager = bound_manager
+    manager.save(NoCustomFieldsEntity)
     item = NoCustomFieldsEntity(id=0)
     manager.save(item)
     manager.delete(item)
