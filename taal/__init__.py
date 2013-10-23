@@ -204,6 +204,19 @@ class Translator(object):
         if commit:
             self.session.commit()
 
+    def move_translations(
+            self, old_translatable, new_translatable, commit=True):
+        self.session.query(self.model).filter_by(
+            context=old_translatable.context,
+            message_id=old_translatable.message_id,
+        ).update({
+            'context': new_translatable.context,
+            'message_id': new_translatable.message_id,
+        })
+
+        if commit:
+            self.session.commit()
+
     def _normalised_translations(self, languages):
         """ helper for bulk operations
 
