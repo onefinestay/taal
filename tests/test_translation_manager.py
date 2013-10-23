@@ -3,6 +3,13 @@ import pytest
 from taal import translation_manager, TranslationContextManager
 
 
+@pytest.yield_fixture(autouse=True)
+def reset_registry():
+    registry = translation_manager._registry.copy()
+    yield
+    translation_manager._registry = registry
+
+
 class NoContextManager(TranslationContextManager):
     pass
 
