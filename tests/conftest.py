@@ -38,7 +38,7 @@ def manager(request):
     from kaiso.persistence import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
-    Manager(neo4j_uri).destroy()
+    Manager(neo4j_uri, skip_type_loading=True).destroy()
     manager = Manager(neo4j_uri)
     return manager
 
@@ -49,7 +49,7 @@ def translating_manager(request):
     from taal.kaiso.manager import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
-    Manager(neo4j_uri).destroy()
+    Manager(neo4j_uri, skip_type_loading=True).destroy()
     manager = Manager(neo4j_uri)
     return manager
 
