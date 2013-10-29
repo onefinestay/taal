@@ -67,8 +67,8 @@ def collect_translatables(manager, obj):
 
 class Manager(KaisoManager):
 
-    def serialize(self, obj):
-        if type(obj) is PersistableType:
+    def serialize(self, obj, for_db=False):
+        if for_db or type(obj) is PersistableType:
             return super(Manager, self).serialize(obj)
 
         message_id = get_message_id(self, obj)
