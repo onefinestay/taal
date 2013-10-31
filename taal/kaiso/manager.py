@@ -185,7 +185,9 @@ class Manager(KaisoManager):
         # for the super() call
 
         # note that we can't collect the context/message_id until after
-        # we call super()
+        # we call super(), since they may be about to change
+        # (context will definitely change, and message_id might, if we add or
+        # remove unique attributes)
 
         for attr_name in iter_translatables(new_descriptor):
             attr = updated_values.get(attr_name)
