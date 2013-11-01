@@ -38,7 +38,7 @@ def manager(request):
     from kaiso.persistence import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
-    Manager(neo4j_uri).destroy()
+    Manager(neo4j_uri, skip_type_loading=True).destroy()
     manager = Manager(neo4j_uri)
     return manager
 
@@ -49,7 +49,7 @@ def translating_manager(request):
     from taal.kaiso.manager import Manager
 
     neo4j_uri = request.config.getoption('neo4j_uri')
-    Manager(neo4j_uri).destroy()
+    Manager(neo4j_uri, skip_type_loading=True).destroy()
     manager = Manager(neo4j_uri)
     return manager
 
@@ -138,3 +138,17 @@ def bound_session(request, session, session_cls):
     translator = Translator(Translation, session_cls(), 'language')
     translator.bind(session)
     return session
+
+
+@pytest.fixture(autouse=True)
+def temporary_static_types(request):
+    from kaiso.test_helpers import TemporaryStaticTypes
+
+    # need to import these before "freezing" the list of static types
+    from kaiso.persistence import TypeSystem
+    from tests.kaiso import Fish
+    TypeSystem, Fish  # pyflakes
+
+    patcher = TemporaryStaticTypes()
+    patcher.start()
+    request.addfinalizer(patcher.stop)

@@ -29,6 +29,13 @@ def get_translator(owner):
             "No translator registered for {}".format(owner))
 
 
+def iter_translatables(descriptor):
+    """ yield translatable attributes given a descriptor """
+    for attr_name, attr_type in descriptor.attributes.items():
+        if isinstance(attr_type, TranslatableString):
+            yield attr_name
+
+
 def collect_translatables(manager, obj):
     """ Return translatables from ``obj``.
 
@@ -46,23 +53,22 @@ def collect_translatables(manager, obj):
     descriptor = manager.type_registry.get_descriptor(type(obj))
     message_id = get_message_id(manager, obj)
 
-    for attr_name, attr_type in descriptor.attributes.items():
+    for attr_name in iter_translatables(descriptor):
         attr = getattr(obj, attr_name)
-        if isinstance(attr_type, TranslatableString):
-            if is_translatable_value(attr):
-                setattr(obj, attr_name, PLACEHOLDER)
-            context = get_context(manager, obj, attr_name)
-            translatable = TaalTranslatableString(
-                context, message_id, attr)
-            translatables.append(translatable)
+        if is_translatable_value(attr):
+            setattr(obj, attr_name, PLACEHOLDER)
+        context = get_context(manager, obj, attr_name)
+        translatable = TaalTranslatableString(
+            context, message_id, attr)
+        translatables.append(translatable)
 
     return translatables
 
 
 class Manager(KaisoManager):
 
-    def serialize(self, obj):
-        if type(obj) is PersistableType:
+    def serialize(self, obj, for_db=False):
+        if for_db or type(obj) is PersistableType:
             return super(Manager, self).serialize(obj)
 
         message_id = get_message_id(self, obj)
@@ -146,3 +152,83 @@ class Manager(KaisoManager):
                 message_id=type_id
             )
             yield (type_id, label, bases, attrs)
+
+    def change_instance_type(self, obj, type_id, updated_values=None):
+
+        if updated_values is None:
+            updated_values = {}
+
+        updated_values = updated_values.copy()
+
+        old_descriptor = self.type_registry.get_descriptor(type(obj))
+        new_descriptor = self.type_registry.get_descriptor_by_id(type_id)
+
+        old_message_id = get_message_id(self, obj)
+        old_translatables = {}
+
+        # collect any translatable fields on the original object
+        # also, replace any values with placeholders for the super() call
+
+        for attr_name in iter_translatables(old_descriptor):
+            attr = getattr(obj, attr_name)
+            if is_translatable_value(attr):
+                setattr(obj, attr_name, PLACEHOLDER)
+            context = get_context(self, obj, attr_name)
+            translatable = TaalTranslatableString(
+                context, old_message_id, attr)
+            old_translatables[attr_name] = translatable
+
+        new_translatables = {}
+
+        # collect any translatable fields from the new type
+        # also, replace any values in updated_values with placeholders
+        # for the super() call
+
+        # note that we can't collect the context/message_id until after
+        # we call super(), since they may be about to change
+        # (context will definitely change, and message_id might, if we add or
+        # remove unique attributes)
+
+        for attr_name in iter_translatables(new_descriptor):
+            attr = updated_values.get(attr_name)
+            if is_translatable_value(attr):
+                updated_values[attr_name] = PLACEHOLDER
+            translatable = TaalTranslatableString(
+                None, None, attr)
+            new_translatables[attr_name] = translatable
+
+        new_obj = super(Manager, self).change_instance_type(
+            obj, type_id, updated_values)
+
+        # we are now able to fill in context/message_id for the new object
+
+        new_message_id = get_message_id(self, new_obj)
+        for attr_name, translatable in new_translatables.items():
+            translatable.message_id = new_message_id
+            translatable.context = get_context(self, new_obj, attr_name)
+
+        to_delete = set(old_translatables) - set(new_translatables)
+        to_rename = set(old_translatables) & set(new_translatables)
+        to_add = set(new_translatables) - set(old_translatables)
+
+        translator = get_translator(self)
+
+        for key in to_delete:
+            translatable = old_translatables[key]
+            translator.delete_translations(translatable)
+
+        for key in to_rename:
+            old_translatable = old_translatables[key]
+            new_translatable = new_translatables[key]
+            translator.move_translations(old_translatable, new_translatable)
+            if new_translatable.pending_value is not None:
+                # updated_values contained a key for a field already existing
+                # on the old type. save the updated translation
+                translator.save_translation(new_translatable)
+
+        for key in to_add:
+            translatable = new_translatables[key]
+            if translatable.pending_value is not None:
+                translator.save_translation(translatable)
+
+        return new_obj
