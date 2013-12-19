@@ -11,7 +11,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 # from taal.models import TranslationMixin
 from taal import Translator, TranslatableString, is_translatable_value
-from tests.models import Model, RequiredModel, Translation, Parent, Child
+from tests.models import (
+    Model, RequiredModel, Translation, Parent, Child, RenamedColumn)
 from taal.sqlalchemy.events import flush_log, load
 from taal.sqlalchemy.types import make_from_obj
 from taal.constants import PlaceholderValue
@@ -601,3 +602,10 @@ class TestListTranslations(object):
             ('animal', '2', 'Monkey'),
             ('animal', '3', None),
         ])
+
+
+def test_missmatched_attr_and_column(bound_session):
+    session = bound_session
+    renamed = RenamedColumn()
+    session.add(renamed)
+    session.commit()

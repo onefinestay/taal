@@ -72,6 +72,14 @@ def refresh(target, args, attrs):
     return target
 
 
+def foo(mapper):
+    column_map = {}
+    for column_attr in mapper.column_attrs:
+        for column in column_attr.columns:
+            column_map[column] = column_attr
+
+    return column_map
+
 def add_to_flush_log(session, target, delete=False):
     mapper = inspect(target.__class__)
     for column in mapper.columns:
