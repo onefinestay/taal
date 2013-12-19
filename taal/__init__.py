@@ -217,7 +217,7 @@ class Translator(object):
         if commit:
             self.session.commit()
 
-    def _normalised_translations(self, languages):
+    def normalised_translations(self, languages):
         """ helper for bulk operations
 
         returns query, aliases, columns, where
@@ -274,14 +274,14 @@ class Translator(object):
         where value_n is the translation for the nth language in the
         ``languages`` list
         """
-        query, _, columns = self._normalised_translations(languages)
+        query, _, columns = self.normalised_translations(languages)
         return query.values(*columns)
 
     def list_missing_translations(self, languages):
         """ as ``list_translations`` but restricted to rows where a translation
         is missing for at least one of the requested languages
         """
-        query, aliases, columns = self._normalised_translations(languages)
+        query, aliases, columns = self.normalised_translations(languages)
         query = query.filter(or_(*(alias.value == NULL for alias in aliases)))
         return query.values(*columns)
 
