@@ -7,8 +7,9 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql.expression import tuple_, and_, or_
+from sqlalchemy.sql.expression import tuple_, and_, or_, desc
 
 from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
@@ -284,6 +285,68 @@ class Translator(object):
         query, aliases, columns = self._normalised_translations(languages)
         query = query.filter(or_(*(alias.value == NULL for alias in aliases)))
         return query.values(*columns)
+
+    def suggest_translation(self, translatable, from_language, to_language):
+        """Suggest a translation for a translatable, into `to_language`, given
+        an existing translation in `from_language` based on other occurances
+        of the same context being translated into a matching value for other
+        message ids
+
+        given the following translations table
+            +----------------------------+------------+----------+----------+
+            | context                    | message_id | language | value    |
+            +----------------------------+------------+----------+----------+
+            | taal:sa_field:model.column | [1]        | en       | Value    |
+            | taal:sa_field:model.column | [1]        | fr       | Valeur   |
+            | taal:sa_field:model.column | [2]        | en       | Value    |
+            +----------------------------+------------+----------+----------+
+
+        suggest_translation(
+            TranslatableString(
+                context="taal:sa_field:model.column",
+                message_id=2),
+            from_language='en',
+            to_language='fr'
+        )
+
+        returns 'Valeur'
+
+        If multuple suggestions are possible, the most frequently occuring one
+        is returned
+        """
+        session = self.session
+        model = self.model
+
+        from_value = session.query(model.value).filter(
+            model.context == translatable.context,
+            model.message_id == translatable.message_id,
+            model.language == from_language,
+        ).scalar()
+
+        if from_value is None:
+            return None
+
+        from_alias = aliased(model, name="from_language")
+        to_alias = aliased(model, name="to_language")
+        query = session.query(to_alias.value).outerjoin(
+            from_alias,
+            and_(
+                from_alias.context == to_alias.context,
+                from_alias.message_id == to_alias.message_id,
+            )
+        ).filter(
+            from_alias.context == translatable.context,
+            from_alias.language == from_language,
+            from_alias.value == from_value,
+            to_alias.language == to_language,
+            to_alias.value != NULL,
+        ).group_by(
+            to_alias.value
+        ).order_by(
+            desc(func.count())
+        )
+
+        return query.limit(1).scalar()
 
 
 class TranslationContextManager(object):
