@@ -311,7 +311,7 @@ class Translator(object):
 
         returns 'Valeur'
 
-        If multuple suggestions are possible, the most frequently occuring one
+        If multiple suggestions are possible, the most frequently occuring one
         is returned
         """
         session = self.session
