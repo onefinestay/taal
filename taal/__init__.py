@@ -135,12 +135,12 @@ class Translator(object):
         Bulk load translations required to translate a translatable
         'structure'
         """
-        translatables = self._collect_translatables(translatable)
-        if not translatables:
+        translatable_pks = self._collect_translatables(translatable)
+        if not translatable_pks:
             return {}
 
-        pks = [(t.context, t.message_id) for t in translatables]
-        pk_filter = tuple_(self.model.context, self.model.message_id).in_(pks)
+        pk_filter = tuple_(self.model.context, self.model.message_id).in_(
+            translatable_pks)
         translations = self.session.query(self.model).filter(
             self.model.language == self.language).filter(pk_filter).values(
             self.model.context, self.model.message_id, self.model.value)
@@ -149,15 +149,16 @@ class Translator(object):
 
     def _collect_translatables(self, translatable, collection=None):
         """
-        Run over a translatable 'structure' and collect any translatables
+        Run over a translatable 'structure' and collect the set of
+        translatable primary keys (context and message_id tuples)
         These are then bulk loaded from the db
         """
 
         if collection is None:
-            collection = []
+            collection = set()
 
         if isinstance(translatable, TranslatableString):
-            collection.append(translatable)
+            collection.add((translatable.context, translatable.message_id))
         elif isinstance(translatable, dict):
             [self._collect_translatables(val, collection)
                 for val in translatable.itervalues()]
