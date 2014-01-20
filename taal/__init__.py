@@ -149,8 +149,8 @@ class Translator(object):
 
     def _collect_translatables(self, translatable, collection=None):
         """
-        Run over a translatable 'structure' and collect the set of translatable
-        primary keys (context and message_id tuples)
+        Run over a translatable 'structure' and collect the set of
+        translatable primary keys (context and message_id tuples)
         These are then bulk loaded from the db
         """
 
