@@ -6,7 +6,8 @@ from sqlalchemy.orm.attributes import get_history
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.sqlalchemy.types import (
-    TranslatableString, pending_translatables, make_from_obj)
+    TranslatableString, pending_translatables, make_from_obj,
+    translatable_models)
 from taal.constants import PlaceholderValue
 
 
@@ -20,6 +21,12 @@ def register_translator(owner, translator):
 
 def get_translator(owner):
     return translator_registry[owner]
+
+
+def get_attr_name(obj, column):
+    cls = obj.__class__
+    attr_name = translatable_models[cls][column]
+    return attr_name
 
 
 def set_(target, value, oldvalue, initiator):
@@ -73,23 +80,22 @@ def refresh(target, args, attrs):
 
 
 def add_to_flush_log(session, target, delete=False):
-    mapper = inspect(target.__class__)
-    for column in mapper.columns:
-        history = get_history(target, column.name)
+    cls = target.__class__
+    for column, attr_name in translatable_models.get(cls, {}).items():
+        history = get_history(target, attr_name)
         if not delete and not history.has_changes():
             # for non-delete actions, we're only interested in changed columns
             continue
 
-        if isinstance(column.type, TranslatableString):
-            if delete:
-                value = None  # will trigger deletion of translations
-            else:
-                value = getattr(target, column.name)
-            if is_translatable_value(value):
-                pending_translatables.add(value)
-                value = value.pending_value
-            flush_log.setdefault(session, []).append(
-                (session.transaction, target, column, value))
+        if delete:
+            value = None  # will trigger deletion of translations
+        else:
+            value = getattr(target, attr_name)
+        if is_translatable_value(value):
+            pending_translatables.add(value)
+            value = value.pending_value
+        flush_log.setdefault(session, []).append(
+            (session.transaction, target, column, value))
 
 
 def before_flush(session, flush_context, instances):
@@ -136,7 +142,8 @@ def after_commit(session):
             # a non-translatable value in the commit log indicates a deletion
             translator.delete_translations(translatable)
 
-        old_value = getattr(target, column.name)
+        attr_name = get_attr_name(target, column)
+        old_value = getattr(target, attr_name)
         if is_translatable_value(old_value):
             # we may now have a primary key
             old_value.message_id = translatable.message_id

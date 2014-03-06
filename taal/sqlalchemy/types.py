@@ -10,9 +10,8 @@ from taal import (
 
 
 CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"
-
-
 pending_translatables = WeakSet()  # to aid debugging
+translatable_models = {}  # cache calls to sqlalchemy inspect
 
 
 class TranslatableString(types.TypeDecorator):
@@ -89,11 +88,18 @@ def make_from_obj(obj, column, pending_value):
 
 @event.listens_for(Mapper, 'mapper_configured')
 def register_listeners(mapper, cls):
-    for column in mapper.columns:
-        if isinstance(column.type, TranslatableString):
-            from taal.sqlalchemy import events
-            event.listen(cls, 'load', events.load)
-            event.listen(cls, 'refresh', events.refresh)
+    from taal.sqlalchemy import events
 
-            column_attr = getattr(cls, column.name)
+    for column_attr in mapper.column_attrs:
+        for column in column_attr.columns:
+            if not isinstance(column.type, TranslatableString):
+                continue
+
+            if cls not in translatable_models:
+                translatable_models[cls] = {}
+                event.listen(cls, 'load', events.load)
+                event.listen(cls, 'refresh', events.refresh)
+
+            translatable_models[cls][column] = column_attr.key
+
             event.listen(column_attr, 'set', events.set_, retval=True)
