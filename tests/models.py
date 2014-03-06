@@ -76,6 +76,14 @@ class RequiredModel(Base):
     identifier = Column(Text)
 
 
+class RenamedColumn(Base):
+    __tablename__ = "renamedcolumns"
+
+    id = Column(SaInteger, primary_key=True)
+    name = Column('other', taal_sqlalchemy.TranslatableString, nullable=False)
+    one = Column('two', SaInteger)
+
+
 # Consider moving to the TranslationContextManager
 def _create_translation(
         session, language, context, message_id, translation_str):
