@@ -1,0 +1,5 @@
+Version 0.5.1
+--------------
+
+Bugfix for SQLAlchemy columns where the model attribute name is different from
+the column name.
