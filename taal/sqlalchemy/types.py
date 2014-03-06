@@ -100,6 +100,6 @@ def register_listeners(mapper, cls):
                 event.listen(cls, 'load', events.load)
                 event.listen(cls, 'refresh', events.refresh)
 
-            translatable_models[cls][column_attr] = column
+            translatable_models[cls][column] = column_attr.key
 
             event.listen(column_attr, 'set', events.set_, retval=True)

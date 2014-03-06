@@ -80,7 +80,7 @@ class RenamedColumn(Base):
     __tablename__ = "renamedcolumns"
 
     id = Column(SaInteger, primary_key=True)
-    name = Column(taal_sqlalchemy.TranslatableString, nullable=False)
+    name = Column('other', taal_sqlalchemy.TranslatableString, nullable=False)
     one = Column('two', SaInteger)
 
 

@@ -23,6 +23,12 @@ def get_translator(owner):
     return translator_registry[owner]
 
 
+def get_attr_name(obj, column):
+    cls = obj.__class__
+    attr_name = translatable_models[cls][column]
+    return attr_name
+
+
 def set_(target, value, oldvalue, initiator):
     """ Wrap any value in ``TranslatableString``, except None and the empty
     string
@@ -75,8 +81,8 @@ def refresh(target, args, attrs):
 
 def add_to_flush_log(session, target, delete=False):
     cls = target.__class__
-    for column_attr, column in translatable_models.get(cls, {}).items():
-        history = get_history(target, column.name)
+    for column, attr_name in translatable_models.get(cls, {}).items():
+        history = get_history(target, attr_name)
         if not delete and not history.has_changes():
             # for non-delete actions, we're only interested in changed columns
             continue
@@ -84,7 +90,7 @@ def add_to_flush_log(session, target, delete=False):
         if delete:
             value = None  # will trigger deletion of translations
         else:
-            value = getattr(target, column.name)
+            value = getattr(target, attr_name)
         if is_translatable_value(value):
             pending_translatables.add(value)
             value = value.pending_value
@@ -136,7 +142,8 @@ def after_commit(session):
             # a non-translatable value in the commit log indicates a deletion
             translator.delete_translations(translatable)
 
-        old_value = getattr(target, column.name)
+        attr_name = get_attr_name(target, column)
+        old_value = getattr(target, attr_name)
         if is_translatable_value(old_value):
             # we may now have a primary key
             old_value.message_id = translatable.message_id
