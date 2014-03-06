@@ -606,6 +606,6 @@ class TestListTranslations(object):
 
 def test_missmatched_attr_and_column(bound_session):
     session = bound_session
-    renamed = RenamedColumn()
+    renamed = RenamedColumn(name='name')
     session.add(renamed)
     session.commit()

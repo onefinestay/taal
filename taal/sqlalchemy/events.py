@@ -6,7 +6,8 @@ from sqlalchemy.orm.attributes import get_history
 from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.sqlalchemy.types import (
-    TranslatableString, pending_translatables, make_from_obj)
+    TranslatableString, pending_translatables, make_from_obj,
+    translatable_models)
 from taal.constants import PlaceholderValue
 
 
@@ -72,32 +73,23 @@ def refresh(target, args, attrs):
     return target
 
 
-def foo(mapper):
-    column_map = {}
-    for column_attr in mapper.column_attrs:
-        for column in column_attr.columns:
-            column_map[column] = column_attr
-
-    return column_map
-
 def add_to_flush_log(session, target, delete=False):
-    mapper = inspect(target.__class__)
-    for column in mapper.columns:
+    cls = target.__class__
+    for column_attr, column in translatable_models.get(cls, {}).items():
         history = get_history(target, column.name)
         if not delete and not history.has_changes():
             # for non-delete actions, we're only interested in changed columns
             continue
 
-        if isinstance(column.type, TranslatableString):
-            if delete:
-                value = None  # will trigger deletion of translations
-            else:
-                value = getattr(target, column.name)
-            if is_translatable_value(value):
-                pending_translatables.add(value)
-                value = value.pending_value
-            flush_log.setdefault(session, []).append(
-                (session.transaction, target, column, value))
+        if delete:
+            value = None  # will trigger deletion of translations
+        else:
+            value = getattr(target, column.name)
+        if is_translatable_value(value):
+            pending_translatables.add(value)
+            value = value.pending_value
+        flush_log.setdefault(session, []).append(
+            (session.transaction, target, column, value))
 
 
 def before_flush(session, flush_context, instances):
