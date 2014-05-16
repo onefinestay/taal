@@ -1,12 +1,13 @@
 import json
 
 from taal import TranslationContextManager, translation_manager
+from taal.kaiso import TYPE_CONTEXT
 
 
 class TypeTranslationContextManager(TranslationContextManager):
     """ TranslationContextManager for Kaiso types """
 
-    context = "taal:kaiso_type"
+    context = TYPE_CONTEXT
 
     def __init__(self, manager, **kwargs):
         self.manager = manager

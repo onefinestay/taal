@@ -6,7 +6,7 @@ import pytest
 from taal import TranslatableString, Translator
 from taal.constants import PLACEHOLDER, PlaceholderValue
 from taal.exceptions import NoTranslatorRegistered
-from taal.kaiso.context_managers import TypeTranslationContextManager
+from taal.kaiso import TYPE_CONTEXT
 from taal.kaiso.manager import collect_translatables
 from taal.kaiso.types import get_context, get_message_id
 
@@ -31,7 +31,7 @@ def test_translating_class_labels(session, translating_type_heirarchy,
 
     translator = Translator(Translation, session, 'en')
     translatable = TranslatableString(
-        context=TypeTranslationContextManager.context,
+        context=TYPE_CONTEXT,
         message_id='Entity', pending_value='English Entity')
 
     translator.save_translation(translatable)
