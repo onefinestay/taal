@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql.expression import tuple_, and_, or_, desc
+from sqlalchemy.sql.expression import and_, or_, desc
 
 from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
@@ -139,12 +139,19 @@ class Translator(object):
         if not translatable_pks:
             return {}
 
-        pk_filter = tuple_(self.model.context, self.model.message_id).in_(
-            translatable_pks)
+        pk_filter = or_(*(
+            and_(
+                self.model.context == context,
+                self.model.message_id == message_id
+            )
+            for context, message_id in translatable_pks
+        ))
+
         translations = self.session.query(self.model).filter(
             self.model.language == self.language).filter(pk_filter).values(
             self.model.context, self.model.message_id, self.model.value)
         cache = {(t[0], t[1]): t[2] for t in translations}
+
         return cache
 
     def _collect_translatables(self, translatable, collection=None):
