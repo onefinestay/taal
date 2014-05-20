@@ -9,8 +9,7 @@ from taal import (
     TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.constants import PLACEHOLDER
 from taal.exceptions import NoTranslatorRegistered
-from taal.kaiso import TranslatableString
-from taal.kaiso.context_managers import TypeTranslationContextManager
+from taal.kaiso import TranslatableString, TYPE_CONTEXT
 from taal.kaiso.types import get_context, get_message_id
 
 
@@ -148,7 +147,7 @@ class Manager(KaisoManager):
 
         for type_id, bases, attrs in type_hierarchy:
             label = TaalTranslatableString(
-                context=TypeTranslationContextManager.context,
+                context=TYPE_CONTEXT,
                 message_id=type_id
             )
             yield (type_id, label, bases, attrs)

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import json
 
 import pytest
-from mock import patch
 
 from taal import TranslatableString, Translator
 from taal.kaiso.types import get_context, get_message_id, make_from_obj
@@ -35,10 +34,9 @@ def test_load_unexpected_value(bound_manager):
     manager = bound_manager
 
     manager.save(CustomFieldsEntity)
-    item = CustomFieldsEntity(id=1, name="foo")
-    with patch('taal.kaiso.TranslatableString.to_primitive') as to_primitive:
-        to_primitive.return_value = "invalid-value"
-        manager.save(item)
+    item = CustomFieldsEntity(id=1)
+    manager.save(item)
+    manager.query('START n=node:customfieldsentity(id="1") SET n.name = "foo"')
 
     with pytest.raises(RuntimeError) as excinfo:
         manager.get(CustomFieldsEntity, id=1)

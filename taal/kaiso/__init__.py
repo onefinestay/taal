@@ -5,6 +5,8 @@ from kaiso.attributes import String
 from taal import is_translatable_value
 from taal.constants import PLACEHOLDER, TRANSPARENT_VALUES, PlaceholderValue
 
+TYPE_CONTEXT = "taal:kaiso_type"
+
 
 class TranslatableString(String):
     @staticmethod

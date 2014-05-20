@@ -1,3 +1,10 @@
+Version 0.5.3
+--------------
+
+Type label context is a top level constant.
+SQL performance fix for loading translations.
+
+
 Version 0.5.2
 --------------
 
