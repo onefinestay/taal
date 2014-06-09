@@ -1,3 +1,10 @@
+Version 0.6.0
+-------------
+
+Bump sqlalchemy requirement to 0.9. The signature of the `after_bulk_update`
+event has changed, and the legacy compat wrapper seems broken as of sqla 0.9.4.
+
+
 Version 0.5.3
 --------------
 

@@ -122,8 +122,9 @@ def before_flush(session, flush_context, instances):
         add_to_flush_log(session, target, delete=True)
 
 
-def after_bulk_update(session, query, query_context, result):
+def after_bulk_update(update_context):
     # bulk updating to None would be ok, but leaves dangling Translations
+    result = update_context.result
     for bind in result.context.compiled.binds.values():
         field_type = bind.type
         if isinstance(field_type, TranslatableString):
