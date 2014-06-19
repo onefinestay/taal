@@ -169,6 +169,30 @@ def test_save(session_cls, bound_manager):
     assert session_cls().query(Translation).count() == 2
 
 
+def test_load_and_save(translating_manager, session):
+    translator = Translator(Translation, session, 'language')
+    manager = translating_manager
+    translator.bind(manager)
+
+    manager.save(CustomFieldsEntity)
+    obj = CustomFieldsEntity(id=1, identifier='foo', name='name')
+    manager.save(obj)
+    loaded = manager.serialize(
+        manager.get(CustomFieldsEntity, id=1)
+    )
+    loaded['identifier'] = 'bar'
+
+    manager.save(
+        manager.deserialize(loaded)
+    )
+
+    reloaded = manager.get(CustomFieldsEntity, id=1)
+
+    assert translator.translate(
+        manager.serialize(reloaded)['name']
+    ) == 'name'
+
+
 def test_delete(session_cls, bound_manager):
     manager = bound_manager
 

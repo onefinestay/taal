@@ -54,8 +54,15 @@ def collect_translatables(manager, obj):
 
     for attr_name in iter_translatables(descriptor):
         attr = getattr(obj, attr_name)
+
         if is_translatable_value(attr):
             setattr(obj, attr_name, PLACEHOLDER)
+
+        if isinstance(attr, TaalTranslatableString):
+            # not changed since value was loaded, so don't collect for
+            # updating the translations table
+            continue
+
         context = get_context(manager, obj, attr_name)
         translatable = TaalTranslatableString(
             context, message_id, attr)
