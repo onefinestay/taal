@@ -1,3 +1,10 @@
+Version 0.6.1
+-------------
+
+Bugfix for re-saving kaiso instances loaded from the db without changing some
+translatable attributes.
+
+
 Version 0.6.0
 -------------
 
