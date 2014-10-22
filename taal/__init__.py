@@ -22,7 +22,14 @@ except:  # pragma: no cover
 
 
 NULL = None  # for pep8
-TRANSLATION_MISSING = object()
+
+
+class TranslationMissing(object):
+    def __repr__(self):
+        return "<TranslationMissing sentinel>"
+
+
+TRANSLATION_MISSING = TranslationMissing()
 
 
 def is_translatable_value(value):
