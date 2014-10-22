@@ -96,12 +96,15 @@ class Translator(object):
     ---------------------------------
     By default, if there is no translation available, `None` is returned. This
     behaviour may be changed by passing a `strategy`, either when constructing
-    a `Translator`, or to `translate`. Possible strategies are:
-        `Translator.strategies.NONE_VALUE: (default) Return None
-        `Translator.strategies.SENTINEL_VALUE : Return a sentinel
-            value (`taal.TRANSLATION_MISSING`)
-        `Translator.strategies.DEBUG_VALUE : Return a debug value (a string
-            indicating a translating is missing, including context information)
+    a :class:`Translator`, or to :meth:`Translator.translate`. Possible
+    strategies are:
+
+        :attr:`Translator.strategies.NONE_VALUE` : (default) Return `None`
+        :attr:`Translator.strategies.SENTINEL_VALUE` : Return a sentinel
+            value (:data:`taal.TRANSLATION_MISSING`)
+        :attr:`Translator.strategies.DEBUG_VALUE` : Return a debug value (a
+            string indicating a translating is missing, including context
+            information)
     """
     strategies = TranslationStrategies
 
