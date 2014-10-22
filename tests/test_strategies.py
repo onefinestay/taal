@@ -30,6 +30,10 @@ class TestStrategies(object):
         translation = translator.translate(translatable)
         assert translation is TRANSLATION_MISSING
 
+    def test_sentinel_value_repr(self):
+        assert 'TranslationMissing' in repr(TRANSLATION_MISSING)
+        assert 'sentinel' in repr(TRANSLATION_MISSING)
+
     def test_debug_value(self, session):
         translator = Translator(
             Translation,
