@@ -129,5 +129,5 @@ def test_update_unsetting_existing_values(
     translator = Translator(Translation, session, 'language')
     translated = translator.translate(data)
 
-    assert translated['common'] == None
+    assert translated['common'] is None
     assert session.query(Translation).count() == 0
