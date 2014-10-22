@@ -91,6 +91,17 @@ class Translator(object):
     instances of ``TranslatableString``. A translator may subsequently
     be passed "structured" data (dicts, lists, tuples) containing
     translatable strings and translate to a particular language
+
+    Strategy for missing translations
+    ---------------------------------
+    By default, if there is no translation available, `None` is returned. This
+    behaviour may be changed by passing a `strategy`, either when constructing
+    a `Translator`, or to `translate`. Possible strategies are:
+        `Translator.strategies.NONE_VALUE: (default) Return None
+        `Translator.strategies.SENTINEL_VALUE : Return a sentinel
+            value (`taal.TRANSLATION_MISSING`)
+        `Translator.strategies.DEBUG_VALUE : Return a debug value (a string
+            indicating a translating is missing, including context information)
     """
     strategies = TranslationStrategies
 
