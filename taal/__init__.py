@@ -238,6 +238,12 @@ class Translator(object):
                 "Cannot save translatable '{}'. "
                 "Message id is None".format(translatable))
 
+        if translatable.pending_value is TRANSLATION_MISSING:
+            raise RuntimeError(
+                "Cannot save translatable '{}'. "
+                "Pending value is `{!r}`".format(
+                    translatable, TRANSLATION_MISSING))
+
         if self.strategy == self.strategies.DEBUG_VALUE:
             debug_value = self._get_debug_translation(translatable)
             if translatable.pending_value == debug_value:
