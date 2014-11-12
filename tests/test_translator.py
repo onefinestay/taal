@@ -39,6 +39,7 @@ def test_static_language():
 
 def test_dynamic_language():
     language = 'foo'
+
     def get_language():
         return language
 
