@@ -62,6 +62,9 @@ class Translator(object):
     a language, bind a translator to a(n other) sqlalchemy session
     and/or a kaiso manager to get translation magic
 
+    Language may be either a string, or a callable returning a string, for
+    more dynamic behaviour.
+
     In addition to native data types, attributes will also include
     instances of ``TranslatableString``. A translator may subsequently
     be passed "structured" data (dicts, lists, tuples) containing
@@ -71,8 +74,16 @@ class Translator(object):
     def __init__(self, model, session, language, debug_output=False):
         self.model = model
         self.session = session
-        self.language = language
         self.debug_output = debug_output
+
+        if callable(language):
+            self.get_language = language
+        else:
+            self.get_language = lambda: language
+
+    @property
+    def language(self):
+        return self.get_language()
 
     def bind(self, target):
         """ register e.g. a sqlalchey session or a kaiso manager """
