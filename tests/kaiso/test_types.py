@@ -36,7 +36,7 @@ def test_load_unexpected_value(bound_manager):
     manager.save(CustomFieldsEntity)
     item = CustomFieldsEntity(id=1)
     manager.save(item)
-    manager.query('START n=node:customfieldsentity(id="1") SET n.name = "foo"')
+    manager.query('MATCH (n:CustomFieldsEntity {id: 1}) SET n.name = "foo"')
 
     with pytest.raises(RuntimeError) as excinfo:
         manager.get(CustomFieldsEntity, id=1)
