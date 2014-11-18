@@ -24,6 +24,14 @@ except:  # pragma: no cover
 NULL = None  # for pep8
 
 
+class TranslationMissing(object):
+    def __repr__(self):
+        return "<TranslationMissing sentinel>"
+
+
+TRANSLATION_MISSING = TranslationMissing()
+
+
 def is_translatable_value(value):
     return value not in TRANSPARENT_VALUES
 
@@ -54,6 +62,23 @@ class TranslatableString(object):
         return self_data == other_data
 
 
+class TranslationStrategies(object):
+    NONE_VALUE = 'NONE_VALUE'
+    SENTINEL_VALUE = 'SENTINEL_VALUE'
+    DEBUG_VALUE = 'DEBUG_VALUE'
+
+    _valid_strategies = (
+        NONE_VALUE,
+        SENTINEL_VALUE,
+        DEBUG_VALUE,
+    )
+
+    @classmethod
+    def validate(cls, strategy):
+        if strategy not in cls._valid_strategies:
+            raise ValueError("Invalid strategy `{}`".format(strategy))
+
+
 class Translator(object):
     """
     Manage a particular set of translations
@@ -62,17 +87,47 @@ class Translator(object):
     a language, bind a translator to a(n other) sqlalchemy session
     and/or a kaiso manager to get translation magic
 
+    Language may be either a string, or a callable returning a string, for
+    more dynamic behaviour.
+
     In addition to native data types, attributes will also include
     instances of ``TranslatableString``. A translator may subsequently
     be passed "structured" data (dicts, lists, tuples) containing
     translatable strings and translate to a particular language
-    """
 
-    def __init__(self, model, session, language, debug_output=False):
+    Strategy for missing translations
+    ---------------------------------
+    By default, if there is no translation available, `None` is returned. This
+    behaviour may be changed by passing a `strategy`, either when constructing
+    a :class:`Translator`, or to :meth:`Translator.translate`. Possible
+    strategies are:
+
+        :attr:`Translator.strategies.NONE_VALUE` : (default) Return `None`
+        :attr:`Translator.strategies.SENTINEL_VALUE` : Return a sentinel
+            value (:data:`taal.TRANSLATION_MISSING`)
+        :attr:`Translator.strategies.DEBUG_VALUE` : Return a debug value (a
+            string indicating a translating is missing, including context
+            information)
+    """
+    strategies = TranslationStrategies
+
+    def __init__(
+        self, model, session, language, strategy=strategies.NONE_VALUE,
+    ):
         self.model = model
         self.session = session
-        self.language = language
-        self.debug_output = debug_output
+
+        self.strategies.validate(strategy)
+        self.strategy = strategy
+
+        if callable(language):
+            self.get_language = language
+        else:
+            self.get_language = lambda: language
+
+    @property
+    def language(self):
+        return self.get_language()
 
     def bind(self, target):
         """ register e.g. a sqlalchey session or a kaiso manager """
@@ -92,15 +147,21 @@ class Translator(object):
         return "[Translation missing ({}, {}, {})]".format(
             self.language, translatable.context, translatable.message_id)
 
-    def _translate(self, translatable, cache):
+    def _translate(self, translatable, strategy, cache):
+        if strategy is None:
+            strategy = self.strategy
+
         try:
             return cache[(translatable.context, translatable.message_id)]
         except KeyError:
-            if self.debug_output:
+            if strategy == self.strategies.NONE_VALUE:
+                return None
+            if strategy == self.strategies.SENTINEL_VALUE:
+                return TRANSLATION_MISSING
+            if strategy == self.strategies.DEBUG_VALUE:
                 return self._get_debug_translation(translatable)
-            return None
 
-    def translate(self, translatable, cache=None):
+    def translate(self, translatable, strategy=None, cache=None):
         """
         Translate ``TranslatableString`` by looking up a translation
 
@@ -108,23 +169,27 @@ class Translator(object):
         and recursively translate any TranslatableStrings found.
         """
 
+        if strategy is not None:
+            self.strategies.validate(strategy)
+
         if cache is None:
             cache = self._prepare_cache(translatable)
 
         if isinstance(translatable, TranslatableString):
-            return self._translate(translatable, cache)
+            return self._translate(
+                translatable, strategy=strategy, cache=cache)
         elif isinstance(translatable, dict):
             return dict(
-                (key, self.translate(val, cache))
+                (key, self.translate(val, strategy=strategy, cache=cache))
                 for key, val in translatable.iteritems()
             )
         elif isinstance(translatable, list):
             return list(
-                self.translate(item, cache)
+                self.translate(item, strategy=strategy, cache=cache)
                 for item in translatable)
         elif isinstance(translatable, tuple):
             return tuple(
-                self.translate(item, cache)
+                self.translate(item, strategy=strategy, cache=cache)
                 for item in translatable)
 
         else:
@@ -184,7 +249,13 @@ class Translator(object):
                 "Cannot save translatable '{}'. "
                 "Message id is None".format(translatable))
 
-        if self.debug_output:
+        if translatable.pending_value is TRANSLATION_MISSING:
+            raise RuntimeError(
+                "Cannot save translatable '{}'. "
+                "Pending value is `{!r}`".format(
+                    translatable, TRANSLATION_MISSING))
+
+        if self.strategy == self.strategies.DEBUG_VALUE:
             debug_value = self._get_debug_translation(translatable)
             if translatable.pending_value == debug_value:
                 return

@@ -9,8 +9,9 @@ from sqlalchemy import Column, Text, Integer
 from sqlalchemy.exc import OperationalError, StatementError
 from sqlalchemy.ext.declarative import declarative_base
 
-# from taal.models import TranslationMixin
-from taal import Translator, TranslatableString, is_translatable_value
+from taal import (
+    Translator, TranslatableString, is_translatable_value, TRANSLATION_MISSING,
+)
 from tests.models import (
     Model, RequiredModel, Translation, Parent, Child, RenamedColumn)
 from taal.sqlalchemy.events import flush_log, load
@@ -89,6 +90,15 @@ def test_save_value(bound_session):
     bound_session.commit()
     assert isinstance(instance.name, TranslatableString)
     assert instance.name.pending_value is None
+
+
+def test_save_sentinel(bound_session):
+    instance = Model(name=TRANSLATION_MISSING)
+    bound_session.add(instance)
+    with pytest.raises(RuntimeError) as exc:
+        bound_session.commit()
+    assert 'Cannot save' in str(exc)
+    assert str(TRANSLATION_MISSING) in str(exc)
 
 
 @pytest.mark.parametrize(("first", "second"), transitions(None, "", "x", "y"))

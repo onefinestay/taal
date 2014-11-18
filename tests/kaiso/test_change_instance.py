@@ -115,3 +115,19 @@ def test_update_unknown_values(
 
     assert translated['common'] == 'common'
     assert session.query(Translation).count() == 1
+
+
+def test_update_unsetting_existing_values(
+        session, bound_manager, change_instance_hierarchy):
+    manager = bound_manager
+    obj = change_instance_hierarchy
+
+    retrieved = manager.deserialize(manager.serialize(obj))
+    new = manager.change_instance_type(retrieved, 'New', {'common': None})
+
+    data = manager.serialize(new)
+    translator = Translator(Translation, session, 'language')
+    translated = translator.translate(data)
+
+    assert translated['common'] is None
+    assert session.query(Translation).count() == 0

@@ -1,3 +1,13 @@
+Version 0.8.0
+-------------
+
+* Allow `language` to be a callable for more dynamic behaviour.
+* Enable more customisable strategy for handling missing translations, adding
+  an option to return a sentinel value in addition to the existing options of
+  `None` or debug output.
+* Bugfix for `change_instance_type` when updating values to be `None`
+
+
 Version 0.7.0
 -----------------
 
