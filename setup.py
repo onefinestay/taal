@@ -34,7 +34,7 @@ requirements, dependency_links = parse_requirments(
 setup(
     name='taal',
     packages=find_packages(exclude=['tests', 'tests.*']),
-    version='0.7.1',
+    version='0.8.0',
     author='onefinestay',
     author_email='engineering@onefinestay.com',
     url='https://github.com/onefinestay/taal',
