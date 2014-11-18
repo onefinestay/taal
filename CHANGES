@@ -1,3 +1,9 @@
+Version 0.7.1
+-------------
+
+Bugfix for `change_instance_type` when updating values to be `None`
+
+
 Version 0.7.0
 -----------------
 

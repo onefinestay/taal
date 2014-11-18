@@ -13,6 +13,7 @@ from taal.kaiso import TranslatableString, TYPE_CONTEXT
 from taal.kaiso.types import get_context, get_message_id
 
 
+MISSING = object()
 translator_registry = WeakKeyDictionary()
 
 
@@ -196,7 +197,12 @@ class Manager(KaisoManager):
         # remove unique attributes)
 
         for attr_name in iter_translatables(new_descriptor):
-            attr = updated_values.get(attr_name)
+            attr = updated_values.get(attr_name, MISSING)
+            if attr is None:
+                continue
+            if attr is MISSING:
+                attr = None
+
             if is_translatable_value(attr):
                 updated_values[attr_name] = PLACEHOLDER
             translatable = TaalTranslatableString(
