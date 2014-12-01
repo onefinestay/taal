@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+# coding: utf-8
+
+from __future__ import absolute_import, unicode_literals
 
 import pytest
 
@@ -6,13 +8,17 @@ from taal import Translator, TranslatableString, TRANSLATION_MISSING
 
 from tests.models import Translation
 
+SAMPLE_CONTEXT = 'context ಠ_ಠ'
+SAMPLE_MESSAGE_ID = 'message_id ಠ_ಠ'
+SAMPLE_LANGUAGE = 'language ಠ_ಠ'
+
 
 @pytest.mark.usefixtures('manager')
 class TestStrategies(object):
     def test_none_value(self, session):
-        translator = Translator(Translation, session, 'language')
+        translator = Translator(Translation, session, SAMPLE_LANGUAGE)
         translatable = TranslatableString(
-            context='context', message_id='message_id')
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
 
         translation = translator.translate(translatable)
         translation is None
@@ -21,11 +27,11 @@ class TestStrategies(object):
         translator = Translator(
             Translation,
             session,
-            'language',
+            SAMPLE_LANGUAGE,
             strategy=Translator.strategies.SENTINEL_VALUE
         )
         translatable = TranslatableString(
-            context='context', message_id='message_id')
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
 
         translation = translator.translate(translatable)
         assert translation is TRANSLATION_MISSING
@@ -38,11 +44,11 @@ class TestStrategies(object):
         translator = Translator(
             Translation,
             session,
-            'language',
+            SAMPLE_LANGUAGE,
             strategy=Translator.strategies.DEBUG_VALUE
         )
         translatable = TranslatableString(
-            context='context', message_id='message_id')
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
 
         translation = translator.translate(translatable)
         assert "[Translation missing" in translation
@@ -51,11 +57,11 @@ class TestStrategies(object):
         translator = Translator(
             Translation,
             session,
-            'language',
+            SAMPLE_LANGUAGE,
             strategy=Translator.strategies.DEBUG_VALUE
         )
         translatable = TranslatableString(
-            context='context', message_id='message_id')
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
 
         translation = translator.translate(
             translatable, strategy=translator.strategies.SENTINEL_VALUE)
@@ -65,12 +71,12 @@ class TestStrategies(object):
         translator = Translator(
             Translation,
             session,
-            'language',
+            SAMPLE_LANGUAGE,
             strategy=Translator.strategies.DEBUG_VALUE
         )
 
         translatable = TranslatableString(
-            context='context', message_id='message_id')
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
         debug_value = translator._get_debug_translation(translatable)
         translatable.pending_value = debug_value
 
@@ -84,9 +90,9 @@ class TestStrategies(object):
                 Translation,
                 session=None,
                 language=None,
-                strategy='invalid',
+                strategy='invalid ಠ_ಠ',
             )
-        assert 'Invalid strategy `invalid`' in str(exc)
+        assert 'Invalid strategy `invalid ಠ_ಠ`' in unicode(exc)
 
     def test_invalid_override(self):
         translator = Translator(
@@ -95,5 +101,5 @@ class TestStrategies(object):
             language=None,
         )
         with pytest.raises(ValueError) as exc:
-            translator.translate(None, strategy='invalid')
-        assert 'Invalid strategy `invalid`' in str(exc)
+            translator.translate(None, strategy='invalid ಠ_ಠ')
+        assert 'Invalid strategy `invalid ಠ_ಠ`' in unicode(exc)
