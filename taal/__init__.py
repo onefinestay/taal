@@ -342,7 +342,7 @@ class Translator(object):
             aliases.append(alias)
 
         columns = [subquery.c.context, subquery.c.message_id] + [
-            alias.value for alias in aliases]
+            alias_.value for alias_ in aliases]
 
         return query, aliases, columns
 
