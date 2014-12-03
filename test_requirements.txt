@@ -1,10 +1,10 @@
 -r requirements.txt
 
-coverage==3.6
-flake8==2.0
-kaiso==0.30.0
+coverage==3.7.1
+flake8==2.2.5
+kaiso==0.30.2
 mock==1.0.1
 mysql-python==1.2.5
-pyflakes==0.7.2
-pytest==2.4.1
-pytest-cov==1.6
+pyflakes==0.8.1
+pytest==2.6.4
+pytest-cov==1.8.1

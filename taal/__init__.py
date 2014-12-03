@@ -76,7 +76,7 @@ class TranslationStrategies(object):
     @classmethod
     def validate(cls, strategy):
         if strategy not in cls._valid_strategies:
-            raise ValueError("Invalid strategy `{}`".format(strategy))
+            raise ValueError(u"Invalid strategy `{}`".format(strategy))
 
 
 class Translator(object):
@@ -144,7 +144,7 @@ class Translator(object):
             raise BindError("Unknown target {}".format(target))
 
     def _get_debug_translation(self, translatable):
-        return "[Translation missing ({}, {}, {})]".format(
+        return u"[Translation missing ({}, {}, {})]".format(
             self.language, translatable.context, translatable.message_id)
 
     def _translate(self, translatable, strategy, cache):

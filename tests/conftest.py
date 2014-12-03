@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
 
 
@@ -97,10 +98,12 @@ def clean_engine(request):
         raise RuntimeError("No database connection string specified")
 
     def drop_and_recreate_db():
-        server, db_name = connection_string.rsplit('/', 1)
-        engine = create_engine(server)
+        connection_url = make_url(connection_string)
+        database = connection_url.database
+        connection_url.database = None  # may not exist, so don't connect to it
+        engine = create_engine(connection_url)
         query = 'DROP DATABASE IF EXISTS {0}; CREATE DATABASE {0}'.format(
-            db_name)
+            database)
         engine.execute(query)
 
     engine = create_engine(connection_string)
