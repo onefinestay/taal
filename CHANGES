@@ -1,3 +1,9 @@
+Version 0.8.1
+-------------
+
+Allow `base_query` to be overriden in `_normalised_translations`.
+
+
 Version 0.8.0
 -------------
 

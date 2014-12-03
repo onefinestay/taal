@@ -297,7 +297,7 @@ class Translator(object):
         if commit:
             self.session.commit()
 
-    def _normalised_translations(self, languages):
+    def _normalised_translations(self, languages, base_query=None):
         """ helper for bulk operations
 
         returns query, aliases, columns, where
@@ -323,7 +323,9 @@ class Translator(object):
         session = self.session
         model = self.model
 
-        base_query = session.query(model.context, model.message_id).distinct()
+        if base_query is None:
+            base_query = session.query(
+                model.context, model.message_id).distinct()
 
         subquery = base_query.subquery(name='basequery')
         query = session.query(subquery)

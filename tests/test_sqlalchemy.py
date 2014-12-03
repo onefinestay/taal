@@ -544,8 +544,8 @@ def test_save_empty(session):
 
 
 class TestListTranslations(object):
-    # setup_method can't take fixtures
-    def setup_(self, session):
+    @pytest.fixture(autouse=True)
+    def sample_data(self, session):
 
         # 3 objects, a moose (älg), a monkey and a hippo (flodhäst)
         # we have both english and swedish translations for the moose,
@@ -570,7 +570,6 @@ class TestListTranslations(object):
         session.commit()
 
     def test_list_translations(self, session):
-        self.setup_(session)
         translator = Translator(Translation, session, '')
         translations = translator.list_translations(['en', 'sv'])
 
@@ -581,7 +580,6 @@ class TestListTranslations(object):
         ])
 
     def test_list_missing_translations(self, session):
-        self.setup_(session)
         translator = Translator(Translation, session, '')
         missing_translations = translator.list_missing_translations(
             ['en', 'sv'])
@@ -592,7 +590,6 @@ class TestListTranslations(object):
         ])
 
     def test_list_none(self, session):
-        self.setup_(session)
         translator = Translator(Translation, session, '')
         translations = translator.list_translations([])
 
@@ -603,7 +600,6 @@ class TestListTranslations(object):
         ])
 
     def test_list_single(self, session):
-        self.setup_(session)
         translator = Translator(Translation, session, '')
         translations = translator.list_translations(['en'])
 
@@ -612,6 +608,21 @@ class TestListTranslations(object):
             ('animal', '2', 'Monkey'),
             ('animal', '3', None),
         ])
+
+    def test_custom_base_query(self, session):
+        translator = Translator(Translation, session, '')
+        default_query, _, _ = translator._normalised_translations(['en'])
+        assert default_query.count() == 3
+
+        base_query = (
+            session
+            .query(Translation.context, Translation.message_id)
+            .filter(Translation.message_id < 3)
+        ).distinct()
+
+        filtered_query, _, _ = translator._normalised_translations(
+            ['en'], base_query=base_query)
+        assert filtered_query.count() == 2
 
 
 def test_missmatched_attr_and_column(bound_session):
