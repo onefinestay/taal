@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import defaultdict
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
@@ -207,9 +208,9 @@ class Translator(object):
         pk_filter = or_(*(
             and_(
                 self.model.context == context,
-                self.model.message_id == message_id
+                self.model.message_id.in_(message_ids)
             )
-            for context, message_id in translatable_pks
+            for context, message_ids in translatable_pks.items()
         ))
 
         translations = self.session.query(self.model).filter(
@@ -227,10 +228,10 @@ class Translator(object):
         """
 
         if collection is None:
-            collection = set()
+            collection = defaultdict(list)
 
         if isinstance(translatable, TranslatableString):
-            collection.add((translatable.context, translatable.message_id))
+            collection[translatable.context].append(translatable.message_id)
         elif isinstance(translatable, dict):
             [self._collect_translatables(val, collection)
                 for val in translatable.itervalues()]
