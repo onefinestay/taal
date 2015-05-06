@@ -228,10 +228,10 @@ class Translator(object):
         """
 
         if collection is None:
-            collection = defaultdict(list)
+            collection = defaultdict(set)
 
         if isinstance(translatable, TranslatableString):
-            collection[translatable.context].append(translatable.message_id)
+            collection[translatable.context].add(translatable.message_id)
         elif isinstance(translatable, dict):
             [self._collect_translatables(val, collection)
                 for val in translatable.itervalues()]
