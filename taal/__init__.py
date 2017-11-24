@@ -11,6 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.expression import and_, or_, desc
 
+from taal import strategies
 from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
 
@@ -20,16 +21,9 @@ try:
 except:  # pragma: no cover
     VERSION = 'unknown'
 
-
 NULL = None  # for pep8
 
-
-class TranslationMissing(object):
-    def __repr__(self):
-        return "<TranslationMissing sentinel>"
-
-
-TRANSLATION_MISSING = TranslationMissing()
+TRANSLATION_MISSING = strategies.SentinelStrategy.TRANSLATION_MISSING
 
 
 def is_translatable_value(value):
@@ -63,9 +57,9 @@ class TranslatableString(object):
 
 
 class TranslationStrategies(object):
-    NONE_VALUE = 'NONE_VALUE'
-    SENTINEL_VALUE = 'SENTINEL_VALUE'
-    DEBUG_VALUE = 'DEBUG_VALUE'
+    NONE_VALUE = strategies.NoneStrategy
+    SENTINEL_VALUE = strategies.SentinelStrategy
+    DEBUG_VALUE = strategies.DebugStrategy
 
     _valid_strategies = (
         NONE_VALUE,
@@ -149,17 +143,11 @@ class Translator(object):
 
     def _translate(self, translatable, strategy, cache):
         if strategy is None:
-            strategy = self.strategy
+            strategy_cls = self.strategy
+        else:
+            strategy_cls = strategy
 
-        try:
-            return cache[(translatable.context, translatable.message_id)]
-        except KeyError:
-            if strategy == self.strategies.NONE_VALUE:
-                return None
-            if strategy == self.strategies.SENTINEL_VALUE:
-                return TRANSLATION_MISSING
-            if strategy == self.strategies.DEBUG_VALUE:
-                return self._get_debug_translation(translatable)
+        return strategy_cls(cache, self.language).translate(translatable)
 
     def translate(self, translatable, strategy=None, cache=None):
         """
