@@ -1,3 +1,6 @@
+from taal.translatablestring import TranslatableString
+
+
 class Strategy(object):
 
     def __init__(self, cache, language):
@@ -12,6 +15,22 @@ class Strategy(object):
 
     def translation_missing(self, translatable):
         raise NotImplementedError
+
+    def recursive_translate(self, translatable):
+        if isinstance(translatable, TranslatableString):
+            return self.translate(translatable)
+        elif isinstance(translatable, dict):
+            return dict(
+                (key, self.recursive_translate(val))
+                for key, val in translatable.iteritems()
+            )
+        elif isinstance(translatable, list):
+            return [self.recursive_translate(item) for item in translatable]
+        elif isinstance(translatable, tuple):
+            return tuple(self.recursive_translate(item)
+                         for item in translatable)
+        else:
+            return translatable
 
 
 class NoneStrategy(Strategy):

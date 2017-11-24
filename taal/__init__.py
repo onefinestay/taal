@@ -14,6 +14,7 @@ from sqlalchemy.sql.expression import and_, or_, desc
 from taal import strategies
 from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
+from taal.translatablestring import TranslatableString
 
 
 try:
@@ -28,32 +29,6 @@ TRANSLATION_MISSING = strategies.SentinelStrategy.TRANSLATION_MISSING
 
 def is_translatable_value(value):
     return value not in TRANSPARENT_VALUES
-
-
-class TranslatableString(object):
-    """
-    Placeholder for a string to be translated
-
-    Holds metadata, ``context`` and ``message_id``, and optionally
-    a string ``pending_value``
-    """
-
-    def __init__(self, context=None, message_id=None, pending_value=None):
-        self.context = context
-        self.message_id = message_id
-        self.pending_value = pending_value
-
-    def __repr__(self):
-        return "<TranslatableString: ({}, {}, {})>".format(
-            self.context, self.message_id, self.pending_value)
-
-    def __eq__(self, other):
-        if not isinstance(other, TranslatableString):
-            return False
-
-        self_data = (self.context, self.message_id, self.pending_value)
-        other_data = (other.context, other.message_id, other.pending_value)
-        return self_data == other_data
 
 
 class TranslationStrategies(object):
@@ -141,14 +116,6 @@ class Translator(object):
         return u"[Translation missing ({}, {}, {})]".format(
             self.language, translatable.context, translatable.message_id)
 
-    def _translate(self, translatable, strategy, cache):
-        if strategy is None:
-            strategy_cls = self.strategy
-        else:
-            strategy_cls = strategy
-
-        return strategy_cls(cache, self.language).translate(translatable)
-
     def translate(self, translatable, strategy=None, cache=None):
         """
         Translate ``TranslatableString`` by looking up a translation
@@ -156,32 +123,19 @@ class Translator(object):
         can also take a 'structure' (currently lists, tuples, and dicts)
         and recursively translate any TranslatableStrings found.
         """
-
         if strategy is not None:
             self.strategies.validate(strategy)
+
+        if strategy is None:
+            strategy_cls = self.strategy
+        else:
+            strategy_cls = strategy
 
         if cache is None:
             cache = self._prepare_cache(translatable)
 
-        if isinstance(translatable, TranslatableString):
-            return self._translate(
-                translatable, strategy=strategy, cache=cache)
-        elif isinstance(translatable, dict):
-            return dict(
-                (key, self.translate(val, strategy=strategy, cache=cache))
-                for key, val in translatable.iteritems()
-            )
-        elif isinstance(translatable, list):
-            return list(
-                self.translate(item, strategy=strategy, cache=cache)
-                for item in translatable)
-        elif isinstance(translatable, tuple):
-            return tuple(
-                self.translate(item, strategy=strategy, cache=cache)
-                for item in translatable)
-
-        else:
-            return translatable
+        return strategy_cls(cache, self.language).recursive_translate(
+            translatable)
 
     def _prepare_cache(self, translatable):
         """
