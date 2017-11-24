@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from taal import TranslatableString
+from taal.translatablestring import TranslatableString
 
 
 class TestComparison(object):

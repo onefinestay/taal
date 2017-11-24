@@ -4,7 +4,8 @@ from __future__ import absolute_import, unicode_literals
 
 import pytest
 
-from taal import Translator, TranslatableString, TRANSLATION_MISSING
+from taal import Translator, TRANSLATION_MISSING
+from taal.translatablestring import TranslatableString
 
 from tests.models import Translation
 

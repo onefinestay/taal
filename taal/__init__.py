@@ -12,10 +12,7 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.expression import and_, or_, desc
 
 from taal import strategies
-from taal.constants import TRANSPARENT_VALUES
 from taal.exceptions import BindError
-from taal.translatablestring import TranslatableString
-
 
 try:
     VERSION = __import__('pkg_resources').get_distribution('taal').version
@@ -25,10 +22,6 @@ except:  # pragma: no cover
 NULL = None  # for pep8
 
 TRANSLATION_MISSING = strategies.SentinelStrategy.TRANSLATION_MISSING
-
-
-def is_translatable_value(value):
-    return value not in TRANSPARENT_VALUES
 
 
 class TranslationStrategies(object):
@@ -131,59 +124,10 @@ class Translator(object):
         else:
             strategy_cls = strategy
 
-        if cache is None:
-            cache = self._prepare_cache(translatable)
-
-        return strategy_cls(cache, self.language).recursive_translate(
-            translatable)
-
-    def _prepare_cache(self, translatable):
-        """
-        Bulk load translations required to translate a translatable
-        'structure'
-        """
-        translatable_pks = self._collect_translatables(translatable)
-        if not translatable_pks:
-            return {}
-
-        pk_filter = or_(*(
-            and_(
-                self.model.context == context,
-                self.model.message_id == message_id
-            )
-            for context, message_id in translatable_pks
-        ))
-
-        translations = self.session.query(self.model).filter(
-            self.model.language == self.language).filter(pk_filter).values(
-            self.model.context, self.model.message_id, self.model.value)
-        cache = {(t[0], t[1]): t[2] for t in translations}
-
-        return cache
-
-    def _collect_translatables(self, translatable, collection=None):
-        """
-        Run over a translatable 'structure' and collect the set of
-        translatable primary keys (context and message_id tuples)
-        These are then bulk loaded from the db
-        """
-
-        if collection is None:
-            collection = set()
-
-        if isinstance(translatable, TranslatableString):
-            collection.add((translatable.context, translatable.message_id))
-        elif isinstance(translatable, dict):
-            [self._collect_translatables(val, collection)
-                for val in translatable.itervalues()]
-        elif isinstance(translatable, list):
-            [self._collect_translatables(item, collection)
-                for item in translatable]
-        elif isinstance(translatable, tuple):
-            [self._collect_translatables(item, collection)
-                for item in translatable]
-
-        return collection
+        return (
+            strategy_cls(self.language, self.model, self.session)
+            .recursive_translate(translatable)
+        )
 
     def save_translation(self, translatable, commit=True):
         if translatable.message_id is None:

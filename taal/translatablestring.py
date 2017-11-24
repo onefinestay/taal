@@ -1,3 +1,10 @@
+from taal.constants import TRANSPARENT_VALUES
+
+
+def is_translatable_value(value):
+    return value not in TRANSPARENT_VALUES
+
+
 class TranslatableString(object):
     """
     Placeholder for a string to be translated
