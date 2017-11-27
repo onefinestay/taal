@@ -28,11 +28,13 @@ class TranslationStrategies(object):
     NONE_VALUE = strategies.NoneStrategy
     SENTINEL_VALUE = strategies.SentinelStrategy
     DEBUG_VALUE = strategies.DebugStrategy
+    EN_FALLBACK = strategies.ENFallbackStrategy
 
     _valid_strategies = (
         NONE_VALUE,
         SENTINEL_VALUE,
         DEBUG_VALUE,
+        EN_FALLBACK,
     )
 
     @classmethod

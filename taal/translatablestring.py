@@ -19,8 +19,11 @@ class TranslatableString(object):
         self.pending_value = pending_value
 
     def __repr__(self):
-        return "<TranslatableString: ({}, {}, {})>".format(
-            self.context, self.message_id, self.pending_value)
+        return u"<TranslatableString: ({}, {}, {})>".format(
+            self.context,
+            self.message_id,
+            self.pending_value,
+        ).encode('utf8')
 
     def __eq__(self, other):
         if not isinstance(other, TranslatableString):

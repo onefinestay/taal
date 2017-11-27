@@ -14,7 +14,9 @@ class Strategy(object):
 
     def translate(self, translatable):
         try:
-            return self.cache[(translatable.context, translatable.message_id)]
+            return self.cache[
+                (translatable.context, translatable.message_id, self.language)
+            ]
         except KeyError:
             return self.translation_missing(translatable)
 
@@ -56,12 +58,23 @@ class Strategy(object):
             for context, message_id in translatable_pks
         ))
 
-        translations = self.session.query(self.model).filter(
-            self.model.language == self.language).filter(pk_filter).values(
-            self.model.context, self.model.message_id, self.model.value)
-        cache = {(t[0], t[1]): t[2] for t in translations}
-
+        translations = (
+            self.session.query(self.model)
+            .filter(self._language_filter())
+            .filter(pk_filter)
+        )
+        cache = {
+            (
+                t.context.decode('utf8'),
+                t.message_id.decode('utf8'),
+                t.language.decode('utf8'),
+            ): t.value.decode('utf8')
+            for t in translations
+        }
         return cache
+
+    def _language_filter(self):
+        return self.model.language == self.language
 
     def _collect_translatables(self, translatable, collection=None):
         """
@@ -110,3 +123,24 @@ class DebugStrategy(Strategy):
 
     def translation_missing(self, translatable):
         return self.get_debug_translation(translatable)
+
+
+class ENFallbackStrategy(Strategy):
+    fallback_lang = 'en'
+    TRANSLATION_MISSING = "<TranslationMissing sentinel>"
+
+    def translation_missing(self, translatable):
+        try:
+            return self.cache[(
+                translatable.context,
+                translatable.message_id,
+                self.fallback_lang,
+            )]
+        except KeyError:
+            return self.TRANSLATION_MISSING
+
+    def _language_filter(self):
+        return or_(
+            self.model.language == self.language,
+            self.model.language == self.fallback_lang,
+        )

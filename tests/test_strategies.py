@@ -54,6 +54,28 @@ class TestStrategies(object):
         translation = translator.translate(translatable)
         assert "[Translation missing" in translation
 
+    def test_en_fallback(self, session):
+        translation = Translation(
+            context=SAMPLE_CONTEXT,
+            message_id=SAMPLE_MESSAGE_ID,
+            language='en',
+            value='en fallback',
+        )
+        session.add(translation)
+        session.commit()
+        translator = Translator(
+            Translation,
+            session,
+            SAMPLE_LANGUAGE,
+            strategy=Translator.strategies.EN_FALLBACK,
+        )
+
+        translatable = TranslatableString(
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
+
+        translation = translator.translate(translatable)
+        assert translation == 'en fallback'
+
     def test_override(self, session):
         translator = Translator(
             Translation,
