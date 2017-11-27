@@ -5,12 +5,16 @@ from sqlalchemy.sql.expression import and_, or_
 from taal.translatablestring import TranslatableString
 
 
+TRANSLATION_MISSING = "<TranslationMissing sentinel>"
+
+
 class Strategy(object):
 
-    def __init__(self, language, model, session):
+    def bind_params(self, language, model, session):
         self.language = language
         self.model = model
         self.session = session
+        return self
 
     def translate(self, translatable):
         try:
@@ -109,10 +113,8 @@ class NoneStrategy(Strategy):
 
 class SentinelStrategy(Strategy):
 
-    TRANSLATION_MISSING = "<TranslationMissing sentinel>"
-
     def translation_missing(self, translatable):
-        return self.TRANSLATION_MISSING
+        return TRANSLATION_MISSING
 
 
 class DebugStrategy(Strategy):
@@ -125,9 +127,10 @@ class DebugStrategy(Strategy):
         return self.get_debug_translation(translatable)
 
 
-class ENFallbackStrategy(Strategy):
-    fallback_lang = 'en'
-    TRANSLATION_MISSING = "<TranslationMissing sentinel>"
+class FallbackLangStrategy(Strategy):
+
+    def __init__(self, fallback_lang):
+        self.fallback_lang = fallback_lang
 
     def translation_missing(self, translatable):
         try:
@@ -137,7 +140,7 @@ class ENFallbackStrategy(Strategy):
                 self.fallback_lang,
             )]
         except KeyError:
-            return self.TRANSLATION_MISSING
+            return TRANSLATION_MISSING
 
     def _language_filter(self):
         return or_(

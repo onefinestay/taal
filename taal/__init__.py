@@ -21,26 +21,13 @@ except:  # pragma: no cover
 
 NULL = None  # for pep8
 
-TRANSLATION_MISSING = strategies.SentinelStrategy.TRANSLATION_MISSING
+TRANSLATION_MISSING = strategies.TRANSLATION_MISSING
 
 
 class TranslationStrategies(object):
-    NONE_VALUE = strategies.NoneStrategy
-    SENTINEL_VALUE = strategies.SentinelStrategy
-    DEBUG_VALUE = strategies.DebugStrategy
-    EN_FALLBACK = strategies.ENFallbackStrategy
-
-    _valid_strategies = (
-        NONE_VALUE,
-        SENTINEL_VALUE,
-        DEBUG_VALUE,
-        EN_FALLBACK,
-    )
-
-    @classmethod
-    def validate(cls, strategy):
-        if strategy not in cls._valid_strategies:
-            raise ValueError(u"Invalid strategy `{}`".format(strategy))
+    NONE_VALUE = strategies.NoneStrategy()
+    SENTINEL_VALUE = strategies.SentinelStrategy()
+    DEBUG_VALUE = strategies.DebugStrategy()
 
 
 class Translator(object):
@@ -80,8 +67,6 @@ class Translator(object):
     ):
         self.model = model
         self.session = session
-
-        self.strategies.validate(strategy)
         self.strategy = strategy
 
         if callable(language):
@@ -118,16 +103,11 @@ class Translator(object):
         can also take a 'structure' (currently lists, tuples, and dicts)
         and recursively translate any TranslatableStrings found.
         """
-        if strategy is not None:
-            self.strategies.validate(strategy)
-
         if strategy is None:
-            strategy_cls = self.strategy
-        else:
-            strategy_cls = strategy
+            strategy = self.strategy
 
         return (
-            strategy_cls(self.language, self.model, self.session)
+            strategy.bind_params(self.language, self.model, self.session)
             .recursive_translate(translatable)
         )
 
