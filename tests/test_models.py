@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 import pytest
 
-from taal import Translator, TranslatableString
+from taal import Translator
+from taal.translatablestring import TranslatableString
 
 from tests.models import Translation
 

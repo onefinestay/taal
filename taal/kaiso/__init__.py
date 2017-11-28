@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 from kaiso.attributes import String
 
-from taal import is_translatable_value
 from taal.constants import PLACEHOLDER, TRANSPARENT_VALUES, PlaceholderValue
+from taal.translatablestring import is_translatable_value
 
 TYPE_CONTEXT = "taal:kaiso_type"
 

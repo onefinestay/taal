@@ -3,12 +3,13 @@ from __future__ import absolute_import
 from kaiso.exceptions import DeserialisationError
 import pytest
 
-from taal import TranslatableString, Translator
+from taal import Translator
 from taal.constants import PLACEHOLDER, PlaceholderValue
 from taal.exceptions import NoTranslatorRegistered
 from taal.kaiso import TYPE_CONTEXT
 from taal.kaiso.manager import collect_translatables
 from taal.kaiso.types import get_context, get_message_id
+from taal.translatablestring import TranslatableString
 
 from tests.models import Translation, CustomFieldsEntity
 

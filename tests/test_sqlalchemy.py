@@ -9,14 +9,13 @@ from sqlalchemy import Column, Text, Integer
 from sqlalchemy.exc import OperationalError, StatementError
 from sqlalchemy.ext.declarative import declarative_base
 
-from taal import (
-    Translator, TranslatableString, is_translatable_value, TRANSLATION_MISSING,
-)
+from taal import Translator, TRANSLATION_MISSING
 from tests.models import (
     Model, RequiredModel, Translation, Parent, Child, RenamedColumn)
 from taal.sqlalchemy.events import flush_log, load
 from taal.sqlalchemy.types import make_from_obj
 from taal.constants import PlaceholderValue
+from taal.translatablestring import TranslatableString, is_translatable_value
 
 
 Base = declarative_base()

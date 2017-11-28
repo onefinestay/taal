@@ -5,8 +5,10 @@ from sqlalchemy import event, inspect, types
 from sqlalchemy.orm.mapper import Mapper
 
 from taal.constants import PLACEHOLDER, PlaceholderValue
-from taal import (
-    TranslatableString as TaalTranslatableString, is_translatable_value)
+from taal.translatablestring import (
+    is_translatable_value,
+    TranslatableString as TaalTranslatableString,
+)
 
 
 CONTEXT_TEMPLATE = "taal:sa_field:{}:{}"

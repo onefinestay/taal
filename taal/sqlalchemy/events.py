@@ -3,12 +3,14 @@ from weakref import WeakKeyDictionary
 from sqlalchemy import event, inspect
 from sqlalchemy.orm.attributes import get_history
 
-from taal import (
-    TranslatableString as TaalTranslatableString, is_translatable_value)
 from taal.sqlalchemy.types import (
     TranslatableString, pending_translatables, make_from_obj,
     translatable_models)
 from taal.constants import PlaceholderValue
+from taal.translatablestring import (
+    is_translatable_value,
+    TranslatableString as TaalTranslatableString,
+)
 
 
 translator_registry = WeakKeyDictionary()

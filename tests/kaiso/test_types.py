@@ -4,8 +4,9 @@ import json
 
 import pytest
 
-from taal import TranslatableString, Translator
+from taal import Translator
 from taal.kaiso.types import get_context, get_message_id, make_from_obj
+from taal.translatablestring import TranslatableString
 
 from tests.models import (
     CustomFieldsEntity, NoCustomFieldsEntity, Translation,

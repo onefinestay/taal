@@ -3,7 +3,7 @@ import json
 from kaiso.types import get_type_id
 from kaiso.serialize import object_to_db_value
 
-from taal import TranslatableString
+from taal.translatablestring import TranslatableString
 
 
 def get_context(manager, obj, attribute_name):
