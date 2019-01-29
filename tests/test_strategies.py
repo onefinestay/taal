@@ -4,7 +4,9 @@ from __future__ import absolute_import, unicode_literals
 
 import pytest
 
-from taal import Translator, TranslatableString, TRANSLATION_MISSING
+from taal import Translator, TRANSLATION_MISSING
+from taal.translatablestring import TranslatableString
+from taal.strategies import FallbackLangStrategy
 
 from tests.models import Translation
 
@@ -53,6 +55,29 @@ class TestStrategies(object):
         translation = translator.translate(translatable)
         assert "[Translation missing" in translation
 
+    def test_en_fallback(self, session):
+        translation = Translation(
+            context=SAMPLE_CONTEXT,
+            message_id=SAMPLE_MESSAGE_ID,
+            language='en',
+            value='en fallback',
+        )
+        session.add(translation)
+        session.commit()
+        en_fallback_strategy = FallbackLangStrategy('en')
+        translator = Translator(
+            Translation,
+            session,
+            SAMPLE_LANGUAGE,
+            strategy=en_fallback_strategy,
+        )
+
+        translatable = TranslatableString(
+            context=SAMPLE_CONTEXT, message_id=SAMPLE_MESSAGE_ID)
+
+        translation = translator.translate(translatable)
+        assert translation == 'en fallback'
+
     def test_override(self, session):
         translator = Translator(
             Translation,
@@ -83,23 +108,3 @@ class TestStrategies(object):
         translator.save_translation(translatable)
 
         assert session.query(Translation).count() == 0
-
-    def test_invalid(self):
-        with pytest.raises(ValueError) as exc:
-            Translator(
-                Translation,
-                session=None,
-                language=None,
-                strategy='invalid ಠ_ಠ',
-            )
-        assert 'Invalid strategy `invalid ಠ_ಠ`' in unicode(exc)
-
-    def test_invalid_override(self):
-        translator = Translator(
-            Translation,
-            session=None,
-            language=None,
-        )
-        with pytest.raises(ValueError) as exc:
-            translator.translate(None, strategy='invalid ಠ_ಠ')
-        assert 'Invalid strategy `invalid ಠ_ಠ`' in unicode(exc)

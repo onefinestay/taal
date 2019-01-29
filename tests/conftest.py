@@ -102,8 +102,11 @@ def clean_engine(request):
         database = connection_url.database
         connection_url.database = None  # may not exist, so don't connect to it
         engine = create_engine(connection_url)
-        query = 'DROP DATABASE IF EXISTS {0}; CREATE DATABASE {0}'.format(
-            database)
+        query = (
+            'DROP DATABASE IF EXISTS {0}; '
+            'CREATE DATABASE {0} CHARACTER SET utf8;'
+            .format(database)
+        )
         engine.execute(query)
 
     engine = create_engine(connection_string)
